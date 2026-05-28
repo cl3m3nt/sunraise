@@ -19,5 +19,5 @@ if __name__ == "__main__":
             active_conversation = False
             print("Bye!")
         else:
-            agent_response = a(user_prompt)
+            agent_response = a.call_dummy(user_prompt)
             print(f"[agent]:{agent_response}")
