@@ -3,10 +3,21 @@ from user import User
 
 if __name__ == "__main__":
 
-    print("Getting started...")
+    print("Building user and agent...")
 
     u = User("test_user", "user")
-    print(u.__dict__)
 
     a = Agent("test_agent", "model", "api_key", 0.5, "system")
-    print(a.__dict__)
+
+    print("Conversation...")
+    active_conversation = True
+
+    while active_conversation:
+        user_prompt = input("[user]:")
+
+        if user_prompt == "exit" or user_prompt == "quit":
+            active_conversation = False
+            print("Bye!")
+        else:
+            agent_response = a(user_prompt)
+            print(f"[agent]:{agent_response}")
