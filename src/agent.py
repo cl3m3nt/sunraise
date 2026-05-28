@@ -5,3 +5,9 @@ class Agent:
         self.api_key = api_key
         self.temperature = temperature
         self.role = role
+
+    def __call__(self, message):
+
+        response = f"You said: {message}"
+
+        return response
