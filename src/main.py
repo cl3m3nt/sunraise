@@ -10,6 +10,8 @@ LLM_MODEL_GEMINI = os.getenv("LLM_MODEL_GEMINI")
 API_KEY_GEMINI = os.getenv("API_KEY_GEMINI")
 LLM_MODEL_CLAUDE = os.getenv("LLM_MODEL_CLAUDE")
 API_KEY_CLAUDE = os.getenv("API_KEY_CLAUDE")
+LLM_MODEL_GPT = os.getenv("LLM_MODEL_GPT")
+API_KEY_GPT = os.getenv("API_KEY_GPT")
 
 
 if __name__ == "__main__":
@@ -20,7 +22,7 @@ if __name__ == "__main__":
         "--provider",
         type=str,
         help="provider name",
-        choices=["dummy", "gemini", "claude"],
+        choices=["dummy", "gemini", "claude", "gpt"],
         default="dummy",
     )
     args = parser.parse_args()
@@ -37,6 +39,8 @@ if __name__ == "__main__":
         a = Agent("test_agent", LLM_MODEL_GEMINI, API_KEY_GEMINI, 0.5, "system")
     elif provider == "claude":
         a = Agent("test_agent", LLM_MODEL_CLAUDE, API_KEY_CLAUDE, 0.5, "system")
+    elif provider == "gpt":
+        a = Agent("test_agent", LLM_MODEL_GPT, API_KEY_GPT, 0.5, "system")
     elif provider == "dummy":
         a = Agent("test_agent", "llm_model", "api_key", 0.5, "system")
 
@@ -54,6 +58,8 @@ if __name__ == "__main__":
                 agent_response = a.call_gemini(user_prompt)
             if provider == "claude":
                 agent_response = a.call_claude(user_prompt)
+            if provider == "gpt":
+                agent_response = a.call_gpt(user_prompt)
             elif provider == "dummy":
                 agent_response = a.call_dummy(user_prompt)
             print(f"[agent]:{agent_response}")

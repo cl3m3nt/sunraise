@@ -1,5 +1,6 @@
 from google import genai
 import anthropic
+from openai import OpenAI
 
 
 class Agent:
@@ -31,3 +32,9 @@ class Agent:
             model=self.model, max_tokens=1000, messages=[prepared_message]
         )
         return response.content[0].text
+
+    def call_gpt(self, message):
+        client = OpenAI(api_key=self.api_key)
+        print("calling gpt")
+        response = client.responses.create(model=self.model, input=message)
+        return response.output_text
