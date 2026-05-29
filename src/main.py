@@ -6,8 +6,11 @@ import argparse
 
 load_dotenv()
 
-LLM_MODEL = os.getenv("LLM_MODEL")
-LLM_API_KEY = os.getenv("LLM_API_KEY")
+LLM_MODEL_GEMINI = os.getenv("LLM_MODEL_GEMINI")
+API_KEY_GEMINI = os.getenv("API_KEY_GEMINI")
+LLM_MODEL_CLAUDE = os.getenv("LLM_MODEL_CLAUDE")
+API_KEY_CLAUDE = os.getenv("API_KEY_CLAUDE")
+
 
 if __name__ == "__main__":
 
@@ -17,7 +20,7 @@ if __name__ == "__main__":
         "--provider",
         type=str,
         help="provider name",
-        choices=["dummy", "gemini"],
+        choices=["dummy", "gemini", "claude"],
         default="dummy",
     )
     args = parser.parse_args()
@@ -31,7 +34,9 @@ if __name__ == "__main__":
 
     # creating agent
     if provider == "gemini":
-        a = Agent("test_agent", LLM_MODEL, LLM_API_KEY, 0.5, "system")
+        a = Agent("test_agent", LLM_MODEL_GEMINI, API_KEY_GEMINI, 0.5, "system")
+    elif provider == "claude":
+        a = Agent("test_agent", LLM_MODEL_CLAUDE, API_KEY_CLAUDE, 0.5, "system")
     elif provider == "dummy":
         a = Agent("test_agent", "llm_model", "api_key", 0.5, "system")
 
@@ -47,6 +52,8 @@ if __name__ == "__main__":
         else:
             if provider == "gemini":
                 agent_response = a.call_gemini(user_prompt)
+            if provider == "claude":
+                agent_response = a.call_claude(user_prompt)
             elif provider == "dummy":
                 agent_response = a.call_dummy(user_prompt)
             print(f"[agent]:{agent_response}")
