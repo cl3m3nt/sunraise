@@ -2,6 +2,7 @@ import anthropic
 import uuid
 from google import genai
 from openai import OpenAI
+from mistralai import Mistral
 
 
 class Agent:
@@ -41,3 +42,11 @@ class Agent:
         client = OpenAI(api_key=self.api_key)
         response = client.responses.create(model=self.model, input=message)
         return response.output_text
+
+    def call_mistral(self, message):
+        with Mistral(api_key=self.api_key) as mistral:
+            prepared_message = {"role": "user", "content": message}
+            response = mistral.chat.complete(
+                model=self.model, messages=[prepared_message], stream=False
+            )
+        return response.choices[0].message.content
