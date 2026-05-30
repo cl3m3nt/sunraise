@@ -28,29 +28,28 @@ if __name__ == "__main__":
     args = parser.parse_args()
     provider = args.provider
 
-    # Getting started
-    print("Building user and agent...")
-
     # creating user
     u = User("test_user", "user")
 
     # creating agent
     if provider == "gemini":
-        a = Agent("test_agent", LLM_MODEL_GEMINI, API_KEY_GEMINI, 0.5, "system")
+        a = Agent("gemini", LLM_MODEL_GEMINI, API_KEY_GEMINI, 0.5, "system")
     elif provider == "claude":
-        a = Agent("test_agent", LLM_MODEL_CLAUDE, API_KEY_CLAUDE, 0.5, "system")
+        a = Agent("claude", LLM_MODEL_CLAUDE, API_KEY_CLAUDE, 0.5, "system")
     elif provider == "gpt":
-        a = Agent("test_agent", LLM_MODEL_GPT, API_KEY_GPT, 0.5, "system")
+        a = Agent("gpt", LLM_MODEL_GPT, API_KEY_GPT, 0.5, "system")
     elif provider == "dummy":
-        a = Agent("test_agent", "llm_model", "api_key", 0.5, "system")
+        a = Agent("dummy", "llm_model", "api_key", 0.5, "system")
 
-    print("Conversation...")
+    # Getting started
+    print(f"Built user and {a.name} agent...Starting conversation")
+
     active_conversation = True
 
     while active_conversation:
         user_prompt = input("[user]:")
 
-        if user_prompt == "exit" or user_prompt == "quit":
+        if user_prompt == "exit" or user_prompt == "quit" or user_prompt == "/q":
             active_conversation = False
             print("Bye!")
         else:
