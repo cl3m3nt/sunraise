@@ -2,7 +2,7 @@ import argparse
 import os
 
 from agent import Agent
-from llmprovider import (
+from llm import (
     AnthropicProvider,
     DummyProvider,
     GoogleProvider,
@@ -13,7 +13,8 @@ from user import User
 
 from dotenv import load_dotenv
 
-load_dotenv()
+# saving load_dotenv() as boolean for downstream check
+isdotenv = load_dotenv()
 
 LLM_MODEL_GEMINI = os.getenv("LLM_MODEL_GEMINI")
 API_KEY_GEMINI = os.getenv("API_KEY_GEMINI")
@@ -79,68 +80,108 @@ if __name__ == "__main__":
     # load config from map
     provider_cfg = PROVIDER_CONFIG_MAP[provider]
 
-    # creating agent
-    if provider == "anthropic":
+    if isdotenv:
 
-        anthropic_llm = AnthropicProvider(
-            provider_cfg["name"],
-            provider_cfg["model"],
-            provider_cfg["api_key"],
-            provider_cfg["temperature"],
-        )
-        a = Agent("anthropicAgent", anthropic_llm, "system")
+        # creating agent
+        if provider == "anthropic":
 
-    elif provider == "dummy":
+            anthropic_llm = AnthropicProvider(
+                provider_cfg["name"],
+                provider_cfg["model"],
+                provider_cfg["api_key"],
+                provider_cfg["temperature"],
+            )
+            a = Agent("anthropicAgent", anthropic_llm, "system")
 
-        dummy_llm = DummyProvider(
-            provider_cfg["name"],
-            provider_cfg["model"],
-            provider_cfg["api_key"],
-            provider_cfg["temperature"],
-        )
-        a = Agent("dummyAgent", dummy_llm, "system")
+        elif provider == "dummy":
 
-    elif provider == "google":
+            dummy_llm = DummyProvider(
+                provider_cfg["name"],
+                provider_cfg["model"],
+                provider_cfg["api_key"],
+                provider_cfg["temperature"],
+            )
+            a = Agent("dummyAgent", dummy_llm, "system")
 
-        google_llm = GoogleProvider(
-            provider_cfg["name"],
-            provider_cfg["model"],
-            provider_cfg["api_key"],
-            provider_cfg["temperature"],
-        )
-        a = Agent("googleAgent", google_llm, "system")
+        elif provider == "google":
 
-    elif provider == "mistral":
+            google_llm = GoogleProvider(
+                provider_cfg["name"],
+                provider_cfg["model"],
+                provider_cfg["api_key"],
+                provider_cfg["temperature"],
+            )
+            a = Agent("googleAgent", google_llm, "system")
+            print("I got created google Agent anyway")
 
-        mistral_llm = MistralProvider(
-            provider_cfg["name"],
-            provider_cfg["model"],
-            provider_cfg["api_key"],
-            provider_cfg["temperature"],
-        )
-        a = Agent("mistralAgent", mistral_llm, "system")
+        elif provider == "mistral":
 
-    elif provider == "openai":
+            mistral_llm = MistralProvider(
+                provider_cfg["name"],
+                provider_cfg["model"],
+                provider_cfg["api_key"],
+                provider_cfg["temperature"],
+            )
+            a = Agent("mistralAgent", mistral_llm, "system")
 
-        openai_llm = OpenAIProvider(
-            provider_cfg["name"],
-            provider_cfg["model"],
-            provider_cfg["api_key"],
-            provider_cfg["temperature"],
-        )
+        elif provider == "openai":
 
-        a = Agent("openaiAgent", openai_llm, "system")
+            openai_llm = OpenAIProvider(
+                provider_cfg["name"],
+                provider_cfg["model"],
+                provider_cfg["api_key"],
+                provider_cfg["temperature"],
+            )
 
-    print(f"Created {a.LLMProvider.provider} agent with {a.LLMProvider.model} LLM")
+            a = Agent("openaiAgent", openai_llm, "system")
 
-    active_conversation = True
+        print(f"Created {a.LLMProvider.provider} agent with {a.LLMProvider.model} LLM")
 
-    while active_conversation:
-        user_prompt = input("[user]:")
+        active_conversation = True
 
-        if user_prompt == "exit" or user_prompt == "quit" or user_prompt == "/q":
-            active_conversation = False
-            print("Bye!")
+        while active_conversation:
+            user_prompt = input("[user]:")
+
+            if user_prompt == "exit" or user_prompt == "quit" or user_prompt == "/q":
+                active_conversation = False
+                print("Bye!")
+            else:
+                try:
+                    agent_response = a(user_prompt)
+                    print(f"[agent]:{agent_response}")
+                except Exception as e:
+                    print(
+                        "There was an error while calling LLM API. Safe exit. More info:"
+                    )
+                    print(e)
+                    active_conversation = False
+
+    else:
+        if provider == "dummy":
+
+            dummy_llm = DummyProvider(
+                provider_cfg["name"],
+                provider_cfg["model"],
+                provider_cfg["api_key"],
+                provider_cfg["temperature"],
+            )
+            a = Agent("dummyAgent", dummy_llm, "system")
+
+            active_conversation = True
+
+            while active_conversation:
+                user_prompt = input("[user]:")
+
+                if (
+                    user_prompt == "exit"
+                    or user_prompt == "quit"
+                    or user_prompt == "/q"
+                ):
+                    active_conversation = False
+                    print("Bye!")
+                else:
+                    agent_response = a(user_prompt)
+                    print(f"[agent]:{agent_response}")
+
         else:
-            agent_response = a(user_prompt)
-        print(f"[agent]:{agent_response}")
+            print("There is no .env file and provider is not dummy model. Safe exit.")
