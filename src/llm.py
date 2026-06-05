@@ -75,9 +75,10 @@ class MistralProvider(LLMProvider):
         super().__init__(name, model, api_key, temperature)
         self.client = Mistral(api_key=self.api_key)
 
-    def __call__(self, message) -> str:
-        prepared_message = {"role": "user", "content": message}
+    def __call__(self, conversation) -> str:
+        # prepared_message = {"role": "user", "content": message}
+        print(conversation)
         response = self.client.chat.complete(
-            model=self.model, messages=[prepared_message], stream=False
+            model=self.model, messages=conversation, stream=False
         )
         return response.choices[0].message.content
