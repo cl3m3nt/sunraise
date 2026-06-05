@@ -166,6 +166,10 @@ if __name__ == "__main__":
             elif provider == "anthropic":
                 user_message = {"role": "user", "content": user_prompt}
             # print(user_message)
+            elif provider == "dummy":
+                user_message = user_prompt
+
+            # for all provider
             current_messages.append(user_message)
             conversation.append(user_message)
 
@@ -182,7 +186,9 @@ if __name__ == "__main__":
                 print("Bye!")
             else:
                 try:
+
                     agent_response = a(conversation)
+
                     if provider == "google":
                         agent_message = {
                             "role": "model",
@@ -203,6 +209,10 @@ if __name__ == "__main__":
                             "role": "assistant",
                             "content": agent_response,
                         }
+                    elif provider == "dummy":
+                        agent_message = a(user_prompt)
+                        agent_response = a(user_prompt)
+
                     print(f"[agent]:{agent_response}")
                     # print(agent_message)
                     current_messages.append(agent_message)
@@ -215,9 +225,9 @@ if __name__ == "__main__":
                     print(e)
                     active_conversation = False
 
-                debug_conversation(
-                    current_messages=current_messages, conversation=conversation
-                )
+                # debug_conversation(
+                # current_messages=current_messages, conversation=conversation
+                # )
     else:
         if provider == "dummy":
 
