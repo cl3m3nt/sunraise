@@ -161,6 +161,8 @@ if __name__ == "__main__":
                 user_message = {"role": "user", "parts": [{"text": user_prompt}]}
             elif provider == "mistral":
                 user_message = {"role": "user", "content": user_prompt}
+            elif provider == "openai":
+                user_message = {"role": "user", "content": user_prompt}
             # print(user_message)
             current_messages.append(user_message)
             conversation.append(user_message)
@@ -185,6 +187,11 @@ if __name__ == "__main__":
                             "parts": [{"text": agent_response}],
                         }
                     elif provider == "mistral":
+                        agent_message = {
+                            "role": "assistant",
+                            "content": agent_response,
+                        }
+                    elif provider == "openai":
                         agent_message = {
                             "role": "assistant",
                             "content": agent_response,
