@@ -25,11 +25,10 @@ class AnthropicProvider(LLMProvider):
         super().__init__(name, model, api_key, temperature)
         self.client = anthropic.Anthropic(api_key=self.api_key)
 
-    def __call__(self, message):
-        prepared_message = {"role": "user", "content": message}
+    def __call__(self, conversation):
         print
         response = self.client.messages.create(
-            model=self.model, max_tokens=1000, messages=[prepared_message]
+            model=self.model, max_tokens=1000, messages=conversation
         )
         return response.content[0].text
 
