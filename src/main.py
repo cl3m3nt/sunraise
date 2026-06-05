@@ -1,5 +1,8 @@
 import argparse
 import os
+import json
+from datetime import datetime
+
 
 from agent import Agent
 from llm import (
@@ -60,6 +63,17 @@ PROVIDER_CONFIG_MAP = {
 }
 
 
+# helper to debug conversation
+def debug_conversation(current_messages, conversation):
+    print("\n")
+    print("Debug:")
+    print("[current messages]:")
+    print(current_messages)
+    print("[conversation]:")
+    print(conversation)
+    print("\n")
+
+
 if __name__ == "__main__":
 
     # parsing arguments
@@ -112,7 +126,6 @@ if __name__ == "__main__":
                 provider_cfg["temperature"],
             )
             a = Agent("googleAgent", google_llm, "system")
-            print("I got created google Agent anyway")
 
         elif provider == "mistral":
 
@@ -139,16 +152,39 @@ if __name__ == "__main__":
 
         active_conversation = True
 
+        conversation = []
+
         while active_conversation:
+            current_messages = []
             user_prompt = input("[user]:")
+            user_message = {"role": "user", "parts": [{"text": user_prompt}]}
+            # print(user_message)
+            current_messages.append(user_message)
+            conversation.append(user_message)
 
             if user_prompt == "exit" or user_prompt == "quit" or user_prompt == "/q":
                 active_conversation = False
+                # saving conversation locally
+                print("Saving conversation")
+                with open(
+                    f"conversation/conversation_{a.LLMProvider.name}_{datetime.now()}.json",
+                    "w",
+                ) as f:
+                    json.dump(conversation, f)
+
                 print("Bye!")
             else:
                 try:
-                    agent_response = a(user_prompt)
+                    agent_response = a(conversation)
+                    agent_message = {
+                        "role": "model",
+                        "parts": [{"text": agent_response}],
+                    }
                     print(f"[agent]:{agent_response}")
+                    # print(agent_message)
+                    current_messages.append(agent_message)
+                    conversation.append(agent_message)
+
                 except Exception as e:
                     print(
                         "There was an error while calling LLM API. Safe exit. More info:"
@@ -156,6 +192,7 @@ if __name__ == "__main__":
                     print(e)
                     active_conversation = False
 
+                # debug_conversation(current_messages=current_messages,conversation=conversation)
     else:
         if provider == "dummy":
 
