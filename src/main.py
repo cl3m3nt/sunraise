@@ -157,7 +157,10 @@ if __name__ == "__main__":
         while active_conversation:
             current_messages = []
             user_prompt = input("[user]:")
-            user_message = {"role": "user", "parts": [{"text": user_prompt}]}
+            if provider == "google":
+                user_message = {"role": "user", "parts": [{"text": user_prompt}]}
+            elif provider == "mistral":
+                user_message = {"role": "user", "content": user_prompt}
             # print(user_message)
             current_messages.append(user_message)
             conversation.append(user_message)
@@ -176,10 +179,16 @@ if __name__ == "__main__":
             else:
                 try:
                     agent_response = a(conversation)
-                    agent_message = {
-                        "role": "model",
-                        "parts": [{"text": agent_response}],
-                    }
+                    if provider == "google":
+                        agent_message = {
+                            "role": "model",
+                            "parts": [{"text": agent_response}],
+                        }
+                    elif provider == "mistral":
+                        agent_message = {
+                            "role": "assistant",
+                            "content": agent_response,
+                        }
                     print(f"[agent]:{agent_response}")
                     # print(agent_message)
                     current_messages.append(agent_message)
@@ -192,7 +201,9 @@ if __name__ == "__main__":
                     print(e)
                     active_conversation = False
 
-                # debug_conversation(current_messages=current_messages,conversation=conversation)
+                debug_conversation(
+                    current_messages=current_messages, conversation=conversation
+                )
     else:
         if provider == "dummy":
 
