@@ -76,7 +76,7 @@ class MistralProvider(LLMProvider):
 
     def __call__(self, conversation) -> str:
         # prepared_message = {"role": "user", "content": message}
-        print(conversation)
+        # print(conversation)
         response = self.client.chat.complete(
             model=self.model, messages=conversation, stream=False
         )

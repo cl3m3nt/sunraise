@@ -1,2 +1,5 @@
 google-genai
+anthropic
+openai
+mistralai
 python-dotenv
