@@ -1,5 +1,4 @@
 import argparse
-import os
 import json
 from datetime import datetime
 
@@ -11,6 +10,11 @@ from llm import (
     OpenAIProvider,
     MistralProvider,
 )
+
+from tools.weather import weather_tool
+from tools.current_time import current_time_tool
+from config import get_provider_config_map, get_google_config
+
 from user import User
 
 from dotenv import load_dotenv
@@ -18,48 +22,8 @@ from dotenv import load_dotenv
 # saving load_dotenv() as boolean for downstream check
 isdotenv = load_dotenv()
 
-LLM_MODEL_GEMINI = os.getenv("LLM_MODEL_GEMINI")
-API_KEY_GEMINI = os.getenv("API_KEY_GEMINI")
-LLM_MODEL_CLAUDE = os.getenv("LLM_MODEL_CLAUDE")
-API_KEY_CLAUDE = os.getenv("API_KEY_CLAUDE")
-LLM_MODEL_GPT = os.getenv("LLM_MODEL_GPT")
-API_KEY_GPT = os.getenv("API_KEY_GPT")
-LLM_MODEL_MISTRAL = os.getenv("LLM_MODEL_MISTRAL")
-API_KEY_MISTRAL = os.getenv("API_KEY_MISTRAL")
-
 # Config map with all provider configurations
-PROVIDER_CONFIG_MAP = {
-    "anthropic": {
-        "name": "anthropic",
-        "model": LLM_MODEL_CLAUDE,
-        "api_key": API_KEY_CLAUDE,
-        "temperature": 0.5,
-    },
-    "dummy": {
-        "name": "dummy",
-        "model": "dummy model",
-        "api_key": "api",
-        "temperature": 0.5,
-    },
-    "google": {
-        "name": "google",
-        "model": LLM_MODEL_GEMINI,
-        "api_key": API_KEY_GEMINI,
-        "temperature": 0.5,
-    },
-    "mistral": {
-        "name": "mistral",
-        "model": LLM_MODEL_MISTRAL,
-        "api_key": API_KEY_MISTRAL,
-        "temperature": 0.5,
-    },
-    "openai": {
-        "name": "openai",
-        "model": LLM_MODEL_GPT,
-        "api_key": API_KEY_GPT,
-        "temperature": 0.5,
-    },
-}
+PROVIDER_CONFIG_MAP = get_provider_config_map()
 
 
 # helper to debug conversation
@@ -118,11 +82,16 @@ if __name__ == "__main__":
 
         elif provider == "google":
 
+            # system instruction + tool config passed during LLM creation
+            tools = [weather_tool, current_time_tool]
+            google_config = get_google_config(tools)
+
             google_llm = GoogleProvider(
                 provider_cfg["name"],
                 provider_cfg["model"],
                 provider_cfg["api_key"],
                 provider_cfg["temperature"],
+                google_config,
             )
             a = Agent("googleAgent", google_llm, "system")
 
@@ -168,12 +137,16 @@ if __name__ == "__main__":
             elif provider == "dummy":
                 user_message = user_prompt
 
-            # for all provider
+            # For all provider
+            # store current user - agent messages
             current_messages.append(user_message)
+            # store all user - agent messages into full conversation
             conversation.append(user_message)
 
+            # conversation exit condition
             if user_prompt == "exit" or user_prompt == "quit" or user_prompt == "/q":
                 active_conversation = False
+
                 # saving conversation locally
                 print("Saving conversation")
                 with open(
@@ -183,27 +156,36 @@ if __name__ == "__main__":
                     json.dump(conversation, f)
 
                 print("Bye!")
+
+            # conversation loop
             else:
                 try:
 
-                    agent_response = a(conversation)
+                    # agent_response = a(conversation)
 
                     if provider == "google":
+                        agent_response = a(conversation)
                         agent_message = {
                             "role": "model",
                             "parts": [{"text": agent_response}],
                         }
                     elif provider == "mistral":
+                        agent_response = a(conversation)
+
                         agent_message = {
                             "role": "assistant",
                             "content": agent_response,
                         }
                     elif provider == "openai":
+                        agent_response = a(conversation)
+
                         agent_message = {
                             "role": "assistant",
                             "content": agent_response,
                         }
                     elif provider == "anthropic":
+                        agent_response = a(conversation)
+
                         agent_message = {
                             "role": "assistant",
                             "content": agent_response,
@@ -213,8 +195,11 @@ if __name__ == "__main__":
                         agent_response = a(user_prompt)
 
                     print(f"[agent]:{agent_response}")
-                    # print(agent_message)
+
+                    # appending agent_message to user-agent one turn messages
                     current_messages.append(agent_message)
+
+                    # appending agent_message to full conversation
                     conversation.append(agent_message)
 
                 except Exception as e:
