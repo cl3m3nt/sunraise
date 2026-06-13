@@ -3,10 +3,14 @@ import anthropic
 from google import genai
 from google.genai import types
 from openai import OpenAI
-from mistralai import Mistral
+from mistralai.client import Mistral
 
 from tools.weather import get_weather
 from tools.current_time import get_current_time
+from tools.weather import mistral_weather_tool
+from tools.current_time import mistral_current_time_tool
+
+import json
 
 
 class LLMProvider(ABC):
@@ -119,14 +123,66 @@ class OpenAIProvider(LLMProvider):
 class MistralProvider(LLMProvider):
     provider = "mistral"
 
-    def __init__(self, name, model, api_key, temperature):
+    def __init__(self, name, model, api_key, temperature, config, *args):
         super().__init__(name, model, api_key, temperature)
         self.client = Mistral(api_key=self.api_key)
+        self.config = config
+        self.args = args
 
     def __call__(self, conversation, *args) -> str:
-        # prepared_message = {"role": "user", "content": message}
-        # print(conversation)
+
+        tools = [mistral_weather_tool, mistral_current_time_tool]
+
         response = self.client.chat.complete(
-            model=self.model, messages=conversation, stream=False
+            model=self.model, messages=conversation, tools=tools, stream=False
         )
+
+        message = response.choices[0].message
+
+        # STEP 2: checking for tool call
+        if getattr(message, "tool_calls", None):
+            tool_function_call = message.tool_calls
+            tool_switch = {
+                "get_weather": get_weather,
+                "get_current_time": get_current_time,
+            }
+            print(
+                "TOOL CALL:",
+                tool_function_call[0].function.name,
+                tool_function_call[0].function.arguments,
+            )
+            tool_function = tool_switch[tool_function_call[0].function.name]
+            tool_func_args = json.loads(tool_function_call[0].function.arguments)
+
+            result = tool_function(**tool_func_args)
+
+            # the assistant_tool_message is required in the conversation by Mistral API
+            assistant_tool_message = {
+                "role": "assistant",
+                "content": None,
+                "tool_calls": [
+                    {
+                        "id": tool_function_call[0].id,
+                        "function": {
+                            "name": tool_function_call[0].function.name,
+                            "arguments": tool_function_call[0].function.arguments,
+                        },
+                    }
+                ],
+            }
+            conversation.append(assistant_tool_message)
+
+            function_message = {
+                "role": "tool",
+                "name": tool_function_call[0].function.name,
+                "content": json.dumps(result),
+                "tool_call_id": tool_function_call[0].id,
+            }
+            conversation.append(function_message)
+
+            response_with_tool = self.client.chat.complete(
+                model=self.model, messages=conversation, tools=tools, stream=False
+            )
+            return response_with_tool.choices[0].message.content
+
         return response.choices[0].message.content

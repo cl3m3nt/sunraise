@@ -97,11 +97,13 @@ if __name__ == "__main__":
 
         elif provider == "mistral":
 
+            mistral_config = None
             mistral_llm = MistralProvider(
                 provider_cfg["name"],
                 provider_cfg["model"],
                 provider_cfg["api_key"],
                 provider_cfg["temperature"],
+                mistral_config,
             )
             a = Agent("mistralAgent", mistral_llm, "system")
 

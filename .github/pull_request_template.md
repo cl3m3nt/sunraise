@@ -17,9 +17,6 @@ Why this change is needed.
 - Possible regressions
 - Affected modules
 
-## Rollback Plan
-How to safely revert if needed.
-
 ## Style Rules
 - Be concise
 - Use bullet points
