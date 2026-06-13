@@ -3,7 +3,7 @@ import anthropic
 from google import genai
 from google.genai import types
 from openai import OpenAI
-from mistralai import Mistral
+from mistralai.client import Mistral
 
 from tools.weather import get_weather
 from tools.current_time import get_current_time
