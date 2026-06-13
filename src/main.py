@@ -151,7 +151,7 @@ if __name__ == "__main__":
                 # saving conversation locally
                 print("Saving conversation")
                 Path("conversation").mkdir(exist_ok=True)
-                timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+                timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S_%f")#[:-3]
                 with open(
                     f"conversation/conversation_{a.LLMProvider.name}_{timestamp}.json",
                     "w",
