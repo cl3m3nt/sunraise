@@ -13,8 +13,10 @@ from llm import (
 
 from tools.weather import weather_tool
 from tools.weather import mistral_weather_tool
+from tools.weather import openai_weather_tool
 from tools.current_time import current_time_tool
 from tools.current_time import mistral_current_time_tool
+from tools.current_time import openai_current_time_tool
 from config import get_provider_config_map, get_google_config
 
 from user import User
@@ -99,25 +101,31 @@ if __name__ == "__main__":
 
         elif provider == "mistral":
 
+            tools = [mistral_weather_tool, mistral_current_time_tool]
             mistral_config = None
+
             mistral_llm = MistralProvider(
                 provider_cfg["name"],
                 provider_cfg["model"],
                 provider_cfg["api_key"],
                 provider_cfg["temperature"],
                 mistral_config,
-                mistral_weather_tool,
-                mistral_current_time_tool,
+                *tools,
             )
             a = Agent("mistralAgent", mistral_llm, "system")
 
         elif provider == "openai":
+
+            tools = [openai_weather_tool, openai_current_time_tool]
+            openai_config = None
 
             openai_llm = OpenAIProvider(
                 provider_cfg["name"],
                 provider_cfg["model"],
                 provider_cfg["api_key"],
                 provider_cfg["temperature"],
+                openai_config,
+                *tools,
             )
 
             a = Agent("openaiAgent", openai_llm, "system")
