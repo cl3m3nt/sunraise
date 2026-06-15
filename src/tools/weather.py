@@ -30,3 +30,15 @@ mistral_weather_tool = {
         },
     },
 }
+
+# get_weather tool config definition for openai
+openai_weather_tool = {
+    "type": "function",
+    "name": "get_weather",
+    "description": "Get current weather for a city",
+    "parameters": {
+        "type": "object",
+        "properties": {"city": {"type": "string"}},
+        "required": ["city"],
+    },
+}
