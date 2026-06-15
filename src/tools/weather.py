@@ -16,3 +16,17 @@ weather_tool = {
         "required": ["city"],
     },
 }
+
+# get_weather tool config definition for mistral
+mistral_weather_tool = {
+    "type": "function",
+    "function": {
+        "name": "get_weather",
+        "description": "Get current weather",
+        "parameters": {
+            "type": "object",
+            "properties": {"city": {"type": "string"}},
+            "required": ["city"],
+        },
+    },
+}

@@ -8,6 +8,8 @@ from mistralai.client import Mistral
 from tools.weather import get_weather
 from tools.current_time import get_current_time
 
+import json
+
 
 class LLMProvider(ABC):
 
@@ -18,7 +20,7 @@ class LLMProvider(ABC):
         self.temperature = temperature
 
     @abstractmethod
-    def __call__(self, message, *args):
+    def __call__(self, message):
         pass
 
 
@@ -40,7 +42,7 @@ class AnthropicProvider(LLMProvider):
 class DummyProvider(LLMProvider):
     provider = "dummy"
 
-    def __call__(self, message, *args) -> str:
+    def __call__(self, message) -> str:
         response = f"You said: {message}"
         return response
 
@@ -54,7 +56,7 @@ class GoogleProvider(LLMProvider):
         self.config = config
         self.args = args
 
-    def __call__(self, message, *args) -> str:
+    def __call__(self, message) -> str:
 
         # STEP 1: first call to LLM
         response = self.client.models.generate_content(
@@ -111,7 +113,7 @@ class OpenAIProvider(LLMProvider):
         super().__init__(name, model, api_key, temperature)
         self.client = OpenAI(api_key=self.api_key)
 
-    def __call__(self, message, *args) -> str:
+    def __call__(self, message) -> str:
         response = self.client.responses.create(model=self.model, input=message)
         return response.output_text
 
@@ -119,14 +121,69 @@ class OpenAIProvider(LLMProvider):
 class MistralProvider(LLMProvider):
     provider = "mistral"
 
-    def __init__(self, name, model, api_key, temperature):
+    def __init__(self, name, model, api_key, temperature, config, *args):
         super().__init__(name, model, api_key, temperature)
         self.client = Mistral(api_key=self.api_key)
+        self.config = config
+        self.args = args
 
-    def __call__(self, conversation, *args) -> str:
-        # prepared_message = {"role": "user", "content": message}
-        # print(conversation)
+    def __call__(self, conversation) -> str:
+
+        # defining tool from self.args
+        tools = list(self.args)
+
+        # STEP 1: first call to LLM
         response = self.client.chat.complete(
-            model=self.model, messages=conversation, stream=False
+            model=self.model, messages=conversation, tools=tools, stream=False
         )
+
+        message = response.choices[0].message
+
+        # STEP 2, 3, 4 are optional in case of tool call
+        # STEP 2: checking for tool call
+        if getattr(message, "tool_calls", None):
+            tool_function_call = message.tool_calls
+            tool_switch = {
+                "get_weather": get_weather,
+                "get_current_time": get_current_time,
+            }
+            print(
+                "TOOL CALL:",
+                tool_function_call[0].function.name,
+                tool_function_call[0].function.arguments,
+            )
+            tool_function = tool_switch[tool_function_call[0].function.name]
+            tool_func_args = json.loads(tool_function_call[0].function.arguments)
+
+            result = tool_function(**tool_func_args)
+
+            # the assistant_tool_message is required in the conversation by Mistral API
+            assistant_tool_message = {
+                "role": "assistant",
+                "content": None,
+                "tool_calls": [
+                    {
+                        "id": tool_function_call[0].id,
+                        "function": {
+                            "name": tool_function_call[0].function.name,
+                            "arguments": tool_function_call[0].function.arguments,
+                        },
+                    }
+                ],
+            }
+            conversation.append(assistant_tool_message)
+
+            function_message = {
+                "role": "tool",
+                "name": tool_function_call[0].function.name,
+                "content": json.dumps(result),
+                "tool_call_id": tool_function_call[0].id,
+            }
+            conversation.append(function_message)
+
+            response_with_tool = self.client.chat.complete(
+                model=self.model, messages=conversation, tools=tools, stream=False
+            )
+            return response_with_tool.choices[0].message.content
+
         return response.choices[0].message.content
