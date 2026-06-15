@@ -12,7 +12,9 @@ from llm import (
 )
 
 from tools.weather import weather_tool
+from tools.weather import mistral_weather_tool
 from tools.current_time import current_time_tool
+from tools.current_time import mistral_current_time_tool
 from config import get_provider_config_map, get_google_config
 
 from user import User
@@ -104,6 +106,8 @@ if __name__ == "__main__":
                 provider_cfg["api_key"],
                 provider_cfg["temperature"],
                 mistral_config,
+                mistral_weather_tool,
+                mistral_current_time_tool,
             )
             a = Agent("mistralAgent", mistral_llm, "system")
 
