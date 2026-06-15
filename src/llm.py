@@ -109,13 +109,55 @@ class GoogleProvider(LLMProvider):
 class OpenAIProvider(LLMProvider):
     provider = "openai"
 
-    def __init__(self, name, model, api_key, temperature):
+    def __init__(self, name, model, api_key, temperature, config, *args):
         super().__init__(name, model, api_key, temperature)
         self.client = OpenAI(api_key=self.api_key)
+        self.config = config
+        self.args = args
 
     def __call__(self, message) -> str:
-        response = self.client.responses.create(model=self.model, input=message)
-        return response.output_text
+
+        # defining tool from self.args
+        tools = list(self.args)
+
+        response = self.client.responses.create(
+            model=self.model, input=message, tools=tools
+        )
+
+        tool_calls = [item for item in response.output if item.type == "function_call"]
+
+        if tool_calls:
+            input_with_tools = list(response.output)
+
+            tool_switch = {
+                "get_weather": get_weather,
+                "get_current_time": get_current_time,
+            }
+
+            for tool_call in tool_calls:
+                print("TOOL CALL:", tool_call.name, tool_call.arguments)
+                tool_function = tool_switch[tool_call.name]
+                tool_function_args = json.loads(tool_call.arguments)
+                result = tool_function(**tool_function_args)
+
+                tool_result = {
+                    "type": "function_call_output",
+                    "call_id": tool_call.call_id,
+                    "output": json.dumps(result),
+                }
+
+                input_with_tools.append(tool_result)
+
+            # Checking current input: message history + input_with_tools
+            # print(message+input_with_tools)
+
+            response_with_tool = self.client.responses.create(
+                model=self.model, input=message + input_with_tools, tools=tools
+            )
+            return response_with_tool.output_text
+
+        else:
+            return response.output_text
 
 
 class MistralProvider(LLMProvider):
