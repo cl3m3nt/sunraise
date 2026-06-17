@@ -13,5 +13,5 @@ class Agent:
         identity = uuid.uuid4()
         return identity
 
-    def __call__(self, message, *args):
-        return self.LLMProvider(message, *args)
+    def __call__(self, message):
+        return self.LLMProvider(message)
