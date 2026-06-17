@@ -3,3 +3,4 @@ anthropic
 openai
 mistralai
 python-dotenv
+tzdata; platform_system == "Windows"
