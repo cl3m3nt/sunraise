@@ -15,9 +15,11 @@ from llm import (
 from tools.weather import weather_tool
 from tools.weather import mistral_weather_tool
 from tools.weather import openai_weather_tool
+from tools.weather import anthropic_weather_tool
 from tools.current_time import current_time_tool
 from tools.current_time import mistral_current_time_tool
 from tools.current_time import openai_current_time_tool
+from tools.current_time import anthropic_current_time_tool
 from config import get_provider_config_map, get_google_config
 
 from user import User
@@ -67,11 +69,14 @@ if __name__ == "__main__":
         # creating agent
         if provider == "anthropic":
 
+            tools = [anthropic_weather_tool, anthropic_current_time_tool]
+
             anthropic_llm = AnthropicProvider(
                 provider_cfg["name"],
                 provider_cfg["model"],
                 provider_cfg["api_key"],
                 provider_cfg["temperature"],
+                *tools,
             )
             a = Agent("anthropicAgent", anthropic_llm, "system")
 

@@ -42,3 +42,14 @@ openai_weather_tool = {
         "required": ["city"],
     },
 }
+
+# get_weather tool config definition for anthropic
+anthropic_weather_tool = {
+    "name": "get_weather",
+    "description": "Get weather for a city",
+    "input_schema": {
+        "type": "object",
+        "properties": {"city": {"type": "string", "description": "City name"}},
+        "required": ["city"],
+    },
+}

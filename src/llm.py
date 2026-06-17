@@ -25,18 +25,65 @@ class LLMProvider(ABC):
 
 
 class AnthropicProvider(LLMProvider):
-    provider = "anthropic"  # class variable
+    provider = "anthropic"
 
-    def __init__(self, name, model, api_key, temperature):
+    def __init__(self, name, model, api_key, temperature, *args):
         super().__init__(name, model, api_key, temperature)
         self.client = anthropic.Anthropic(api_key=self.api_key)
+        self.args = args
 
-    def __call__(self, conversation, *args):
-        print
+    def __call__(self, conversation):
+
+        # defining tool from self.args
+        tools = list(self.args)
+
         response = self.client.messages.create(
-            model=self.model, max_tokens=1000, messages=conversation
+            model=self.model, max_tokens=1000, messages=conversation, tools=tools
         )
-        return response.content[0].text
+
+        tool_calls = [block for block in response.content if block.type == "tool_use"]
+
+        if tool_calls:
+            prepared_input_with_tools = []
+            prepared_input_with_tools.append(
+                {"role": "assistant", "content": response.content}
+            )
+
+            tool_switch = {
+                "get_weather": get_weather,
+                "get_current_time": get_current_time,
+            }
+
+            tool_result = []
+            for tool_call in tool_calls:
+                print("TOOL CALL:", tool_call.name, tool_call.input)
+                tool_function = tool_switch[tool_call.name]
+                tool_function_args = tool_call.input
+                result = tool_function(**tool_function_args)
+
+                tool_result.append(
+                    {
+                        "type": "tool_result",
+                        "tool_use_id": tool_call.id,
+                        "content": json.dumps(result),
+                    }
+                )
+
+            prepared_tool_result = {"role": "user", "content": tool_result}
+
+            prepared_input_with_tools.append(prepared_tool_result)
+
+            response_with_tool = self.client.messages.create(
+                model=self.model,
+                max_tokens=1000,
+                messages=conversation + prepared_input_with_tools,
+                tools=tools,
+            )
+            return response_with_tool.content[0].text
+
+        else:
+
+            return response.content[0].text
 
 
 class DummyProvider(LLMProvider):
