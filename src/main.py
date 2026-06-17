@@ -4,6 +4,7 @@ from datetime import datetime
 from pathlib import Path
 
 from agent import Agent
+from banner import get_banner
 from llm import (
     AnthropicProvider,
     DummyProvider,
@@ -20,7 +21,7 @@ from tools.current_time import current_time_tool
 from tools.current_time import mistral_current_time_tool
 from tools.current_time import openai_current_time_tool
 from tools.current_time import anthropic_current_time_tool
-from config import get_provider_config_map, get_google_config
+from config import get_sunraise_version, get_provider_config_map, get_google_config
 
 from user import User
 
@@ -45,6 +46,10 @@ def debug_conversation(current_messages, conversation):
 
 
 if __name__ == "__main__":
+
+    # sunrAIse banner
+    sunraise_version = get_sunraise_version()
+    get_banner(sunraise_version)
 
     # parsing arguments
     parser = argparse.ArgumentParser(description="Agent app")
@@ -136,7 +141,7 @@ if __name__ == "__main__":
 
             a = Agent("openaiAgent", openai_llm, "system")
 
-        print(f"Created {a.LLMProvider.provider} agent with {a.LLMProvider.model} LLM")
+        print(f"Created {a.LLMProvider.provider} agent with {a.LLMProvider.model} LLM.")
 
         active_conversation = True
 
