@@ -42,3 +42,14 @@ openai_current_time_tool = {
         "required": ["timezone"],
     },
 }
+
+
+anthropic_current_time_tool = {
+    "name": "get_current_time",
+    "description": "Get the current date and time for a timezone",
+    "input_schema": {
+        "type": "object",
+        "properties": {"timezone": {"type": "string", "description": "timezone name"}},
+        "required": ["timezone"],
+    },
+}
