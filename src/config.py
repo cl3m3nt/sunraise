@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+SUNRAISE_VERSION = "0.1.0"
 LLM_MODEL_GEMINI = os.getenv("LLM_MODEL_GEMINI")
 API_KEY_GEMINI = os.getenv("API_KEY_GEMINI")
 LLM_MODEL_CLAUDE = os.getenv("LLM_MODEL_CLAUDE")
@@ -12,6 +13,10 @@ LLM_MODEL_GPT = os.getenv("LLM_MODEL_GPT")
 API_KEY_GPT = os.getenv("API_KEY_GPT")
 LLM_MODEL_MISTRAL = os.getenv("LLM_MODEL_MISTRAL")
 API_KEY_MISTRAL = os.getenv("API_KEY_MISTRAL")
+
+
+def get_sunraise_version():
+    return SUNRAISE_VERSION
 
 
 # Config map with all provider configurations
