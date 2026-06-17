@@ -21,6 +21,7 @@ class GeocodeError(Exception):
 
 
 def _geocode(city: str) -> tuple[float, float, str]:
+    """Geocode a city name to (lat, lon, name) via Open-Meteo."""
     r = requests.get(
         "https://geocoding-api.open-meteo.com/v1/search",
         params={"name": city, "count": 1, "language": "en", "format": "json"},
@@ -35,7 +36,7 @@ def _geocode(city: str) -> tuple[float, float, str]:
 
 
 def get_weather(city: str) -> dict:
-    """Current weather for a city, via Open-Meteo."""
+    """Current weather for a city, via Open-Meteo. This tool func is used for the API calls."""
     try:
         lat, lon, name = _geocode(city)
     except GeocodeError as e:
@@ -44,6 +45,7 @@ def get_weather(city: str) -> dict:
         return {"error": f"geocoding failed: {e}"}
 
     try:
+        # We can try to get more info, check https://open-meteo.com/en/docs
         r = requests.get(
             "https://api.open-meteo.com/v1/forecast",
             params={
