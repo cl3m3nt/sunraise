@@ -229,50 +229,62 @@ class MistralProvider(LLMProvider):
         message = response.choices[0].message
 
         # STEP 2, 3, 4 are optional in case of tool call
-        # STEP 2: checking for tool call
         if getattr(message, "tool_calls", None):
-            tool_function_call = message.tool_calls
-            tool_switch = {
-                "get_weather": get_weather,
-                "get_current_time": get_current_time,
-            }
-            print(
-                "TOOL CALL:",
-                tool_function_call[0].function.name,
-                tool_function_call[0].function.arguments,
-            )
-            tool_function = tool_switch[tool_function_call[0].function.name]
-            tool_func_args = json.loads(tool_function_call[0].function.arguments)
+            tool_calls = [
+                item
+                for item in response.choices[0].message.tool_calls
+                if item.type == "function"
+            ]
 
-            result = tool_function(**tool_func_args)
+            if tool_calls:
+                # the assistant_tool_message is required in the conversation by Mistral API
+                assistant_tool_message = {
+                    "role": "assistant",
+                    "content": message.content,
+                    "tool_calls": [
+                        {
+                            "id": tool_call.id,
+                            "function": {
+                                "name": tool_call.function.name,
+                                "arguments": tool_call.function.arguments,
+                            },
+                        }
+                        for tool_call in (
+                            message.tool_calls
+                        )  # iterating over tools here
+                    ],
+                }
+                conversation.append(assistant_tool_message)
 
-            # the assistant_tool_message is required in the conversation by Mistral API
-            assistant_tool_message = {
-                "role": "assistant",
-                "content": None,
-                "tool_calls": [
-                    {
-                        "id": tool_function_call[0].id,
-                        "function": {
-                            "name": tool_function_call[0].function.name,
-                            "arguments": tool_function_call[0].function.arguments,
-                        },
+                tool_switch = {
+                    "get_weather": get_weather,
+                    "get_current_time": get_current_time,
+                }
+
+                for tool_call in tool_calls:
+
+                    print(
+                        "TOOL CALL:",
+                        tool_call.function.name,
+                        tool_call.function.arguments,
+                    )
+                    tool_function = tool_switch[tool_call.function.name]
+                    tool_func_args = json.loads(tool_call.function.arguments)
+
+                    result = tool_function(**tool_func_args)
+
+                    function_message = {
+                        "role": "tool",
+                        "name": tool_call.function.name,
+                        "content": json.dumps(result),
+                        "tool_call_id": tool_call.id,
                     }
-                ],
-            }
-            conversation.append(assistant_tool_message)
+                    conversation.append(function_message)
 
-            function_message = {
-                "role": "tool",
-                "name": tool_function_call[0].function.name,
-                "content": json.dumps(result),
-                "tool_call_id": tool_function_call[0].id,
-            }
-            conversation.append(function_message)
+                response_with_tool = self.client.chat.complete(
+                    model=self.model, messages=conversation, tools=tools, stream=False
+                )
+                return response_with_tool.choices[0].message.content
 
-            response_with_tool = self.client.chat.complete(
-                model=self.model, messages=conversation, tools=tools, stream=False
-            )
-            return response_with_tool.choices[0].message.content
-
-        return response.choices[0].message.content
+        else:
+            return response.choices[0].message.content
