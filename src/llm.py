@@ -110,47 +110,59 @@ class GoogleProvider(LLMProvider):
             model=self.model, contents=message, config=self.config
         )
 
-        # STEP 2, 3, 4 are optional in case of tool call
-        parts = response.candidates[0].content.parts
+        tool_calls = [
+            part
+            for part in response.candidates[0].content.parts
+            if getattr(part, "function_call")
+        ]
 
-        for part in parts:
+        if tool_calls:
 
-            # STEP 2: checking for tool call
-            if getattr(part, "function_call", None):
-                tool_function_call = part.function_call
+            # STEP 2, 3, 4 are optional in case of tool call
+            parts = response.candidates[0].content.parts
 
-                # STEP 3: execute tool
-                tool_switch = {
-                    "get_weather": get_weather,
-                    "get_current_time": get_current_time,
-                }
-                print("TOOL CALL:", tool_function_call.name, tool_function_call.args)
-                tool_function = tool_switch[tool_function_call.name]
-                result = tool_function(**tool_function_call.args)
+            tool_result = []
 
-                # STEP 4: send back tool result to LLM for new response
-                response_with_tool = self.client.models.generate_content(
-                    model=self.model,
-                    contents=[
-                        *message,
-                        response.candidates[0].content,
-                        types.Content(
-                            role="user",
-                            parts=[
-                                types.Part.from_function_response(
-                                    name=tool_function_call.name,
-                                    response={"result": result},
-                                )
-                            ],
-                        ),
-                    ],
-                    config=self.config,
+            for part in parts:
+
+                # STEP 2: checking for tool call
+                if getattr(part, "function_call", None):
+                    tool_function_call = part.function_call
+
+                    # STEP 3: execute tool
+                    tool_switch = {
+                        "get_weather": get_weather,
+                        "get_current_time": get_current_time,
+                    }
+                    print(
+                        "TOOL CALL:", tool_function_call.name, tool_function_call.args
+                    )
+                    tool_function = tool_switch[tool_function_call.name]
+                    result = tool_function(**tool_function_call.args)
+
+                tool_result.append(
+                    types.Part.from_function_response(
+                        name=tool_function_call.name,
+                        response={"result": result},
+                    )
                 )
 
-                return response_with_tool.text
+            # STEP 4: send back tool result to LLM for new response
+            response_with_tool = self.client.models.generate_content(
+                model=self.model,
+                contents=[
+                    *message,
+                    response.candidates[0].content,
+                    types.Content(role="user", parts=tool_result),
+                ],
+                config=self.config,
+            )
 
-        # When no tool used
-        return response.text
+            return response_with_tool.text
+
+        else:
+            # When no tool used
+            return response.text
 
 
 class OpenAIProvider(LLMProvider):
