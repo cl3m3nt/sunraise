@@ -13,11 +13,11 @@ from llm import (
     MistralProvider,
 )
 
-from tools.weather import weather_tool
+from tools.weather import google_weather_tool
 from tools.weather import mistral_weather_tool
 from tools.weather import openai_weather_tool
 from tools.weather import anthropic_weather_tool
-from tools.current_time import current_time_tool
+from tools.current_time import google_current_time_tool
 from tools.current_time import mistral_current_time_tool
 from tools.current_time import openai_current_time_tool
 from tools.current_time import anthropic_current_time_tool
@@ -98,7 +98,7 @@ if __name__ == "__main__":
         elif provider == "google":
 
             # system instruction + tool config passed during LLM creation
-            tools = [weather_tool, current_time_tool]
+            tools = [google_weather_tool, google_current_time_tool]
             google_config = get_google_config(tools)
 
             google_llm = GoogleProvider(

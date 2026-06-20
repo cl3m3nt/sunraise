@@ -37,10 +37,12 @@ class AnthropicProvider(LLMProvider):
         # defining tool from self.args
         tools = list(self.args)
 
+        # initial response
         response = self.client.messages.create(
             model=self.model, max_tokens=1000, messages=conversation, tools=tools
         )
 
+        # tool_calls built from block
         tool_calls = [block for block in response.content if block.type == "tool_use"]
 
         if tool_calls:
@@ -54,14 +56,16 @@ class AnthropicProvider(LLMProvider):
                 "get_current_time": get_current_time,
             }
 
-            tool_result = []
+            # tool_result definition
+            tool_results = []
+
             for tool_call in tool_calls:
                 print("TOOL CALL:", tool_call.name, tool_call.input)
                 tool_function = tool_switch[tool_call.name]
                 tool_function_args = tool_call.input
                 result = tool_function(**tool_function_args)
 
-                tool_result.append(
+                tool_results.append(
                     {
                         "type": "tool_result",
                         "tool_use_id": tool_call.id,
@@ -69,10 +73,13 @@ class AnthropicProvider(LLMProvider):
                     }
                 )
 
-            prepared_tool_result = {"role": "user", "content": tool_result}
+            # all tool_result concatenated as prepared_tool_result
+            prepared_tool_result = {"role": "user", "content": tool_results}
 
+            # initial response + prepared_tool_result
             prepared_input_with_tools.append(prepared_tool_result)
 
+            # final response
             response_with_tool = self.client.messages.create(
                 model=self.model,
                 max_tokens=1000,
@@ -103,13 +110,16 @@ class GoogleProvider(LLMProvider):
         self.config = config
         self.args = args
 
-    def __call__(self, message) -> str:
+    def __call__(self, conversation) -> str:
 
-        # STEP 1: first call to LLM
+        # self.args unused as tools are defined by config
+
+        # initial response
         response = self.client.models.generate_content(
-            model=self.model, contents=message, config=self.config
+            model=self.model, contents=conversation, config=self.config
         )
 
+        # tool_calls built from part
         tool_calls = [
             part
             for part in response.candidates[0].content.parts
@@ -118,42 +128,40 @@ class GoogleProvider(LLMProvider):
 
         if tool_calls:
 
-            # STEP 2, 3, 4 are optional in case of tool call
-            parts = response.candidates[0].content.parts
+            tool_switch = {
+                "get_weather": get_weather,
+                "get_current_time": get_current_time,
+            }
 
-            tool_result = []
+            # tool_result definition
+            tool_results = []
 
-            for part in parts:
+            for tool_call in tool_calls:
 
-                # STEP 2: checking for tool call
-                if getattr(part, "function_call", None):
-                    tool_function_call = part.function_call
+                if getattr(tool_call, "function_call", None):
+                    tool_call_function = tool_call.function_call
 
-                    # STEP 3: execute tool
-                    tool_switch = {
-                        "get_weather": get_weather,
-                        "get_current_time": get_current_time,
-                    }
                     print(
-                        "TOOL CALL:", tool_function_call.name, tool_function_call.args
+                        "TOOL CALL:", tool_call_function.name, tool_call_function.args
                     )
-                    tool_function = tool_switch[tool_function_call.name]
-                    result = tool_function(**tool_function_call.args)
+                    tool_function = tool_switch[tool_call_function.name]
+                    result = tool_function(**tool_call_function.args)
 
-                tool_result.append(
+                # all tool_result concatenated as prepared_tool_result
+                tool_results.append(
                     types.Part.from_function_response(
-                        name=tool_function_call.name,
+                        name=tool_call_function.name,
                         response={"result": result},
                     )
                 )
 
-            # STEP 4: send back tool result to LLM for new response
+            # final response
             response_with_tool = self.client.models.generate_content(
                 model=self.model,
                 contents=[
-                    *message,
+                    *conversation,
                     response.candidates[0].content,
-                    types.Content(role="user", parts=tool_result),
+                    types.Content(role="user", parts=tool_results),
                 ],
                 config=self.config,
             )
@@ -161,7 +169,7 @@ class GoogleProvider(LLMProvider):
             return response_with_tool.text
 
         else:
-            # When no tool used
+
             return response.text
 
 
@@ -174,19 +182,24 @@ class OpenAIProvider(LLMProvider):
         self.config = config
         self.args = args
 
-    def __call__(self, message) -> str:
+    def __call__(self, conversation) -> str:
 
         # defining tool from self.args
         tools = list(self.args)
 
+        # initial response
         response = self.client.responses.create(
-            model=self.model, input=message, tools=tools
+            model=self.model, input=conversation, tools=tools
         )
 
+        # tool_calls built from item
         tool_calls = [item for item in response.output if item.type == "function_call"]
 
         if tool_calls:
             input_with_tools = list(response.output)
+
+            # tool_result definition
+            tool_results = []
 
             tool_switch = {
                 "get_weather": get_weather,
@@ -205,13 +218,14 @@ class OpenAIProvider(LLMProvider):
                     "output": json.dumps(result),
                 }
 
-                input_with_tools.append(tool_result)
+                tool_results.append(tool_result)
 
-            # Checking current input: message history + input_with_tools
-            # print(message+input_with_tools)
+            # first response + tool_result concatenated
+            input_with_tools = input_with_tools + tool_results
 
+            # final response
             response_with_tool = self.client.responses.create(
-                model=self.model, input=message + input_with_tools, tools=tools
+                model=self.model, input=conversation + input_with_tools, tools=tools
             )
             return response_with_tool.output_text
 
@@ -233,14 +247,13 @@ class MistralProvider(LLMProvider):
         # defining tool from self.args
         tools = list(self.args)
 
-        # STEP 1: first call to LLM
+        # initial response
         response = self.client.chat.complete(
             model=self.model, messages=conversation, tools=tools, stream=False
         )
 
         message = response.choices[0].message
 
-        # STEP 2, 3, 4 are optional in case of tool call
         if getattr(message, "tool_calls", None):
             tool_calls = [
                 item
@@ -249,6 +262,15 @@ class MistralProvider(LLMProvider):
             ]
 
             if tool_calls:
+
+                # tool_result definition
+                tool_results = []
+
+                tool_switch = {
+                    "get_weather": get_weather,
+                    "get_current_time": get_current_time,
+                }
+
                 # the assistant_tool_message is required in the conversation by Mistral API
                 assistant_tool_message = {
                     "role": "assistant",
@@ -266,12 +288,7 @@ class MistralProvider(LLMProvider):
                         )  # iterating over tools here
                     ],
                 }
-                conversation.append(assistant_tool_message)
-
-                tool_switch = {
-                    "get_weather": get_weather,
-                    "get_current_time": get_current_time,
-                }
+                tool_results.append(assistant_tool_message)
 
                 for tool_call in tool_calls:
 
@@ -291,10 +308,16 @@ class MistralProvider(LLMProvider):
                         "content": json.dumps(result),
                         "tool_call_id": tool_call.id,
                     }
-                    conversation.append(function_message)
 
+                    # tool_result concatenated
+                    tool_results.append(function_message)
+
+                # final response
                 response_with_tool = self.client.chat.complete(
-                    model=self.model, messages=conversation, tools=tools, stream=False
+                    model=self.model,
+                    messages=conversation + tool_results,
+                    tools=tools,
+                    stream=False,
                 )
                 return response_with_tool.choices[0].message.content
 
