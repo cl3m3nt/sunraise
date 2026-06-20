@@ -7,6 +7,6 @@ RESET = "\033[0m"
 def get_banner(version):
 
     print(f"{COL1}╔══════════════════════════════════════╗{RESET}")
-    print(f"{COL1}║   Sunraise Agent Client (CLI) v0.1.0 ║{RESET}")
+    print(f"{COL1}║   Sunraise Agent Client (CLI) {version} ║{RESET}")
     print(f"{COL2}║   Enter '/q' or 'exit' to quit       ║{RESET}")
     print(f"{COL3}╚══════════════════════════════════════╝{RESET}\n")

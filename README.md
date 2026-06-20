@@ -1,11 +1,12 @@
 # Sunraise
 
-A modular Python CLI for multi-turn conversations with LLM agents. Sunraise wraps several providers behind a shared `Agent` / `LLMProvider` interface.
+A modular Python CLI for multi-turn conversations with LLM agents.
 
 ## What it does
 
 - Runs an interactive chat loop from the terminal
 - Supports **Anthropic**, **Google**, **OpenAI**, **Mistral**, and a **dummy** provider for local testing without API keys
+- Tool calling — built-in `get_weather` and `get_current_time` tools for all providers but dummy.
 
 ## Project structure
 
@@ -15,7 +16,12 @@ sunraise/
 │   ├── main.py              # CLI entry point (multi-turn chat)
 │   ├── agent.py             # Agent wrapper around an LLM provider
 │   ├── llm.py               # Provider implementations (Anthropic, Google, OpenAI, Mistral, Dummy)
+│   ├── config.py            # Provider config map, version, Google tool/system-instruction config
+│   ├── banner.py            # Colored CLI startup banner
 │   ├── user.py              # User identity model
+│   └── tools/
+│       ├── weather.py       # get_weather tool + per-provider schemas
+│       └── current_time.py  # get_current_time tool + per-provider schemas
 └── requirements.txt
 ```
 
@@ -43,13 +49,14 @@ source .venv/bin/activate
 
 ```bash
 pip install -r requirements.txt
-pip install anthropic openai mistralai requests
 ```
+
+`requirements.txt` includes all provider SDKs (`google-genai`, `anthropic`, `openai`, `mistralai`), `python-dotenv`, the dev tooling (`pre-commit`, `black`, `ruff`), and `tzdata` on Windows (needed by `get_current_time`'s `zoneinfo`).
 
 4. IMPORTANT: Create a `.env` file in `src/` with your API keys and model names (see table below).
 API keys are free for Google Gemini and Mistral AI:
-https://aistudio.google.com/api-keys
-https://admin.mistral.ai/organization/api-keys
+- https://aistudio.google.com/api-keys
+- https://admin.mistral.ai/organization/api-keys
 
 ### Environment variables
 
@@ -68,6 +75,23 @@ Add these to `src/.env` (only the variables for your chosen provider are require
 
 Without a `.env` file, only the **dummy** provider works.
 
+## Tools / function calling
+
+Sunraise ships with two built-in tools, implemented in `src/tools/`:
+
+- `get_weather(city)` — returns the weather for a city
+- `get_current_time(timezone)` — returns the current date and time for a timezone
+
+Each provider expects its tools in a different shape, so every tool defines a per-provider schema:
+
+- **Anthropic** uses a `block` definition
+- **Google** uses a `part` definition and `config` helper
+- **OpenAI** uses `item` definition
+- **Mistral** uses `item` definition
+
+At runtime, each provider in `src/llm.py` resolves a tool call.
+The **dummy** provider has no tools.
+
 ## Usage
 
 Run the chat CLI from the `src/` directory:
@@ -76,6 +100,8 @@ Run the chat CLI from the `src/` directory:
 cd src
 python main.py --provider dummy
 ```
+
+On launch, Sunraise prints a colored banner showing current version.
 
 ### Provider options
 
@@ -97,7 +123,7 @@ During the session:
 
 - Type your message at the `[user]:` prompt
 - Read the agent reply at `[agent]:`
-- End the session with `exit`, `quit`, or `/q` — the conversation is saved under `src/conversation/`
+- End the session with `exit`, `quit`, or `/q`
 
 
 ## Architecture
@@ -118,6 +144,9 @@ flowchart LR
 - **`Agent`** — holds a provider instance and delegates inference
 - **`User`** — lightweight identity model (UUID per session)
 - **`main.py`** — builds the conversation history, formats messages per provider, and persists on exit
+- **`config.py`** - support modules for provider config
+- **`banner.py`** —  version and the CLI startup banner
+- **`tools`** — each provider routes tool calls through `tool_switch` to `get_weather` / `get_current_time` templates
 
 ## Development
 - Pre-commit hooks are configured via `.pre-commit-config.yaml`
