@@ -7,7 +7,7 @@ A modular Python CLI for multi-turn conversations with LLM agents. Sunraise wrap
 - Runs an interactive chat loop from the terminal
 - Supports **Anthropic**, **Google**, **OpenAI**, **Mistral**, and a **dummy** provider for local testing without API keys
 - Tool / function calling — built-in `get_weather` and `get_current_time` tools for the Anthropic, Google, OpenAI, and Mistral providers
-- Prints a colored startup banner showing the Sunraise version (`SUNRAISE_VERSION = "0.2.0"`, defined in `src/config.py`)
+- Prints a colored startup banner showing the Sunraise version (`SUNRAISE_VERSION = "v0.1.1"`, defined in `src/config.py`)
 
 ## Project structure
 
