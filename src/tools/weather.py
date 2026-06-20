@@ -6,8 +6,8 @@ def get_weather(city: str):
         return {"city": city, "temperature": 22}
 
 
-# get_weather tool config definition
-weather_tool = {
+# get_weather tool config definition for google
+google_weather_tool = {
     "name": "get_weather",
     "description": "Get the current weather for a city",
     "parameters": {
