@@ -56,8 +56,8 @@ pip install -r requirements.txt
 
 4. IMPORTANT: Create a `.env` file in `src/` with your API keys and model names (see table below).
 API keys are free for Google Gemini and Mistral AI:
-https://aistudio.google.com/api-keys
-https://admin.mistral.ai/organization/api-keys
+- https://aistudio.google.com/api-keys
+- https://admin.mistral.ai/organization/api-keys
 
 ### Environment variables
 
