@@ -1,13 +1,12 @@
 # Sunraise
 
-A modular Python CLI for multi-turn conversations with LLM agents. Sunraise wraps several providers behind a shared `Agent` / `LLMProvider` interface.
+A modular Python CLI for multi-turn conversations with LLM agents.
 
 ## What it does
 
 - Runs an interactive chat loop from the terminal
 - Supports **Anthropic**, **Google**, **OpenAI**, **Mistral**, and a **dummy** provider for local testing without API keys
-- Tool / function calling — built-in `get_weather` and `get_current_time` tools for the Anthropic, Google, OpenAI, and Mistral providers
-- Prints a colored startup banner showing the Sunraise version (`SUNRAISE_VERSION = "v0.1.1"`, defined in `src/config.py`)
+- Tool calling — built-in `get_weather` and `get_current_time` tools for all providers but dummy.
 
 ## Project structure
 
@@ -80,16 +79,18 @@ Without a `.env` file, only the **dummy** provider works.
 
 Sunraise ships with two built-in tools, implemented in `src/tools/`:
 
-- `get_weather(city)` — returns the weather for a city (`src/tools/weather.py`)
-- `get_current_time(timezone)` — returns the current date and time for a timezone (`src/tools/current_time.py`)
+- `get_weather(city)` — returns the weather for a city
+- `get_current_time(timezone)` — returns the current date and time for a timezone
 
 Each provider expects its tools in a different shape, so every tool defines a per-provider schema:
 
-- **Google** uses a `parameters` declaration (wrapped via `get_google_config` in `src/config.py`)
-- **Anthropic** uses an `input_schema`
-- **OpenAI** and **Mistral** use their respective function-calling formats
+- **Anthropic** uses a `block` definition
+- **Google** uses a `part` definition and `config` helper
+- **OpenAI** uses `item` definition
+- **Mistral** uses `item` definition
 
-At runtime, each provider in `src/llm.py` resolves a tool call through a `tool_switch` map (`get_weather` / `get_current_time`), executes the function, and feeds the result back to the model for a final answer. The **dummy** provider has no tools — it simply echoes your input.
+At runtime, each provider in `src/llm.py` resolves a tool call.
+The **dummy** provider has no tools.
 
 ## Usage
 
@@ -100,7 +101,7 @@ cd src
 python main.py --provider dummy
 ```
 
-On launch, Sunraise prints a colored banner showing the version (from `SUNRAISE_VERSION` in `src/config.py`).
+On launch, Sunraise prints a colored banner showing current version.
 
 ### Provider options
 
@@ -122,7 +123,7 @@ During the session:
 
 - Type your message at the `[user]:` prompt
 - Read the agent reply at `[agent]:`
-- End the session with `exit`, `quit`, or `/q` — the conversation is saved as a timestamped JSON file under `src/conversation/` (the directory is created automatically)
+- End the session with `exit`, `quit`, or `/q`
 
 
 ## Architecture
