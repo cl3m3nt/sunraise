@@ -289,7 +289,7 @@ if __name__ == "__main__":
                     # ---------------------------------------------------------------------------
 
                     # appending agent_message to full conversation
-                    if not react:
+                    if provider != "google" or react is None:
                         conversation.append(agent_message)
 
                     conversation_index = conversation_index + 1
