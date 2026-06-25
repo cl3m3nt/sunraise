@@ -1,7 +1,8 @@
 # get_weather tool func definition
 def get_weather(city: str):
     if city == "Paris":
-        return "it's sunny in Paris"
+        # return "it's sunny in Paris"
+        return {"city": city, "temperature": 30}
     else:
         return {"city": city, "temperature": 22}
 
