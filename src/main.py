@@ -210,7 +210,7 @@ if __name__ == "__main__":
                 active_conversation = False
 
                 # saving conversation locally
-                if not react:
+                if provider != "google" or react is None:
                     save_conversation(a, conversation)
 
                 print("Bye!")
