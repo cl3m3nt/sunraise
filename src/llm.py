@@ -10,6 +10,11 @@ from tools.current_time import get_current_time
 
 import json
 
+TOOL_SWITCH = {
+    "get_weather": get_weather,
+    "get_current_time": get_current_time,
+}
+
 
 class LLMProvider(ABC):
 
@@ -128,11 +133,6 @@ class GoogleProvider(LLMProvider):
 
         if tool_calls:
 
-            tool_switch = {
-                "get_weather": get_weather,
-                "get_current_time": get_current_time,
-            }
-
             # tool_result definition
             tool_results = []
 
@@ -144,7 +144,7 @@ class GoogleProvider(LLMProvider):
                     print(
                         "TOOL CALL:", tool_call_function.name, tool_call_function.args
                     )
-                    tool_function = tool_switch[tool_call_function.name]
+                    tool_function = TOOL_SWITCH[tool_call_function.name]
                     result = tool_function(**tool_call_function.args)
 
                 # all tool_result concatenated as prepared_tool_result
@@ -171,6 +171,123 @@ class GoogleProvider(LLMProvider):
         else:
 
             return response.text
+
+    def extract_text(self, model_turn) -> str:
+        """Extract Text from LLM response"""
+
+        # BLUE = "\033[38;5;117m"
+        # GREEN = "\033[38;5;46m"  # bright green   # sky blue
+        # RESET = "\033[0m"
+
+        texts = []
+
+        for part in model_turn.parts:
+            if getattr(part, "text", None):
+                text = part.text
+                # print(f"{BLUE}---- text ----{RESET}")
+                # print(text)
+                texts.append(text)
+
+            # else:
+            # print(f"{BLUE}---- text ----{RESET}")
+            #   print("No Text part")
+
+        return "\n".join(texts).strip()
+
+    def extract_function_calls(self, model_turn):
+        """Extract the function_call part of a LLM (Actions)"""
+
+        # BLUE = "\033[38;5;117m"
+        # GREEN = "\033[38;5;46m"  # bright green   # sky blue
+        # RESET = "\033[0m"
+
+        # print("----- from extract function call -----")
+        function_calls = []
+
+        # print(response)
+        # print("parts")
+        for part in model_turn.parts:
+            # print("------part------")
+            # print(part)
+
+            if getattr(part, "function_call", None):
+                function_call = part.function_call
+                # print(f"{GREEN}---- function_call ----{RESET}")
+                # print(function_call)
+                function_calls.append(function_call)
+            # else:
+            # In case there is a no tool call
+            # print(f"{GREEN}---- function_call ----{RESET}")
+            #   print("No Function call part")
+
+        return function_calls
+
+    def react_call(self, conversation, max_steps):
+
+        # init react_conversation from User/Agent conversation
+        # react_conversation = list(conversation)
+
+        for step in range(1, max_steps + 1):
+
+            # Initial response from model
+            response = self.client.models.generate_content(
+                model=self.model, contents=conversation, config=self.config
+            )
+
+            # Defining model turn
+            model_turn = response.candidates[0].content
+
+            # Record the model's turn
+            conversation.append(model_turn)
+
+            # The text part from model
+            thought = self.extract_text(model_turn)
+
+            # Multiple or parallel function calls
+            function_calls = self.extract_function_calls(model_turn)
+
+            if thought:
+                print(f"  [thought {step}]: {thought}")
+
+            # No tool calls -> the model is done reasoning, this is the answer.
+            if not function_calls:
+                return thought or response.text
+
+            # Otherwise execute each requested tool and feed observations back.
+            # This section is subject to non-deterministic behavior
+            # All tools can be call executed in 1 ReAct turn if // tool call
+            # Or tools can be executed sequentially in multiple turns
+            # Temperature and prompt influence this process
+            observation_parts = []
+            for fc in function_calls:
+                print(f"  [action {step}]: {fc.name}({dict(fc.args)})")
+                tool_function = TOOL_SWITCH.get(fc.name)
+
+                if tool_function is None:
+                    result = f"Error: unknown tool '{fc.name}'"
+                else:
+                    try:
+                        result = tool_function(**fc.args)
+                    except Exception as exc:  # surface tool errors back to the model
+                        result = f"Error in ReAct loop while running {fc.name}: {exc}"
+
+                print(f"  [observation {step}]: {result}")
+                observation_parts.append(
+                    types.Part.from_function_response(
+                        name=fc.name, response={"result": result}
+                    )
+                )
+
+            # Observations are sent back as a user turn for the next iteration.
+            conversation.append(types.Content(role="user", parts=observation_parts))
+
+        budget_message = (
+            "Reached the maximum number of reasoning steps without a final answer."
+        )
+        conversation.append(
+            types.Content(role="model", parts=[types.Part(text=budget_message)])
+        )
+        return budget_message
 
 
 class OpenAIProvider(LLMProvider):

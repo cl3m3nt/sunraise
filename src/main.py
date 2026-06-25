@@ -21,7 +21,8 @@ from tools.current_time import google_current_time_tool
 from tools.current_time import mistral_current_time_tool
 from tools.current_time import openai_current_time_tool
 from tools.current_time import anthropic_current_time_tool
-from config import get_sunraise_version, get_provider_config_map, get_google_config
+from config import get_sunraise_version, get_provider_config_map
+from config import build_google_config, build_google_react_config
 
 from user import User
 
@@ -45,6 +46,19 @@ def debug_conversation(current_messages, conversation):
     print("\n")
 
 
+def save_conversation(agent, conversation):
+    """Save User/Agent conversation locally"""
+    print("Saving conversation")
+    folder_path = "conversation/conversation_" + datetime.now().strftime("%Y-%m-%d")
+    Path(folder_path).mkdir(exist_ok=True)
+    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S_%f")
+    with open(
+        f"{folder_path}/conversation_{agent.LLMProvider.name}_{timestamp}.json",
+        "w",
+    ) as f:
+        json.dump(conversation, f)
+
+
 if __name__ == "__main__":
 
     # sunrAIse banner
@@ -60,8 +74,16 @@ if __name__ == "__main__":
         choices=["anthropic", "dummy", "google", "mistral", "openai"],
         default="dummy",
     )
+    parser.add_argument(
+        "--react",
+        type=int,
+        help="react iteration steps",
+        choices=[3, 5, 7, 9],
+        default=None,
+    )
     args = parser.parse_args()
     provider = args.provider
+    react = args.react
 
     # creating user
     u = User("test_user", "user")
@@ -99,7 +121,11 @@ if __name__ == "__main__":
 
             # system instruction + tool config passed during LLM creation
             tools = [google_weather_tool, google_current_time_tool]
-            google_config = get_google_config(tools)
+
+            if react is not None:
+                google_config = build_google_react_config(tools)
+            else:
+                google_config = build_google_config(tools)
 
             google_llm = GoogleProvider(
                 provider_cfg["name"],
@@ -143,12 +169,23 @@ if __name__ == "__main__":
 
         print(f"Created {a.LLMProvider.provider} agent with {a.LLMProvider.model} LLM.")
 
+        # ---------------------------------------------------------------------------
+        # MAIN CONVERSATION LOOP
+        # ---------------------------------------------------------------------------
+
         active_conversation = True
 
         conversation = []
 
+        conversation_index = 0
+
         while active_conversation:
             current_messages = []
+
+            # ---------------------------------------------------------------------------
+            # USER PROMPT MANAGEMENT
+            # ---------------------------------------------------------------------------
+
             user_prompt = input("[user]:")
             if provider == "google":
                 user_message = {"role": "user", "parts": [{"text": user_prompt}]}
@@ -173,14 +210,8 @@ if __name__ == "__main__":
                 active_conversation = False
 
                 # saving conversation locally
-                print("Saving conversation")
-                Path("conversation").mkdir(exist_ok=True)
-                timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S_%f")  # [:-3]
-                with open(
-                    f"conversation/conversation_{a.LLMProvider.name}_{timestamp}.json",
-                    "w",
-                ) as f:
-                    json.dump(conversation, f)
+                if not react:
+                    save_conversation(a, conversation)
 
                 print("Bye!")
 
@@ -188,14 +219,33 @@ if __name__ == "__main__":
             else:
                 try:
 
-                    # agent_response = a(conversation)
+                    YELLOW = "\033[38;5;220m"  # yellow
+                    RESET = "\033[0m"
+
+                    # ---------------------------------------------------------------------------
+                    # GOOGLE AGENT PROCESSING - DEFAULT AND REACT
+                    # ---------------------------------------------------------------------------
 
                     if provider == "google":
-                        agent_response = a(conversation)
+
+                        print(
+                            f"{YELLOW}---- conversation step {conversation_index} ---{RESET}"
+                        )
+                        if not react:
+                            agent_response = a(conversation)
+
+                        elif react:
+                            agent_response = a.react_call(conversation, react)
+
                         agent_message = {
                             "role": "model",
                             "parts": [{"text": agent_response}],
                         }
+
+                    # ---------------------------------------------------------------------------
+                    # OTHER PROVIDER PROCESSING - DEFAULT
+                    # ---------------------------------------------------------------------------
+
                     elif provider == "mistral":
                         agent_response = a(conversation)
 
@@ -221,13 +271,32 @@ if __name__ == "__main__":
                         agent_message = a(user_prompt)
                         agent_response = a(user_prompt)
 
+                    # ---------------------------------------------------------------------------
+                    # AGENT RESPONSE PRINT
+                    # ---------------------------------------------------------------------------
+
                     print(f"[agent]:{agent_response}")
+
+                    # ---------------------------------------------------------------------------
+                    # AGENT RESPONSE PRINT
+                    # ---------------------------------------------------------------------------
 
                     # appending agent_message to user-agent one turn messages
                     current_messages.append(agent_message)
 
+                    # ---------------------------------------------------------------------------
+                    # CONVERSATION AND GLOBAL TURN MANAGEMENT
+                    # ---------------------------------------------------------------------------
+
                     # appending agent_message to full conversation
-                    conversation.append(agent_message)
+                    if not react:
+                        conversation.append(agent_message)
+
+                    conversation_index = conversation_index + 1
+
+                # ---------------------------------------------------------------------------
+                # CONVERSATION AND GLOBAL TURN MANAGEMENT
+                # ---------------------------------------------------------------------------
 
                 except Exception as e:
                     print(
@@ -236,9 +305,10 @@ if __name__ == "__main__":
                     print(e)
                     active_conversation = False
 
-                # debug_conversation(
-                # current_messages=current_messages, conversation=conversation
-                # )
+    # ---------------------------------------------------------------------------
+    # CONVERSATION FOR DUMMY
+    # ---------------------------------------------------------------------------
+
     else:
         if provider == "dummy":
 
