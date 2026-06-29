@@ -22,7 +22,7 @@ def save_conversation(agent, conversation):
     """Save User/Agent conversation locally"""
     print("Saving conversation")
     folder_path = "conversation/conversation_" + datetime.now().strftime("%Y-%m-%d")
-    Path(folder_path).mkdir(exist_ok=True)
+    Path(folder_path).mkdir(parents=True, exist_ok=True)
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S_%f")
     with open(
         f"{folder_path}/conversation_{agent.LLMProvider.name}_{timestamp}.json",
