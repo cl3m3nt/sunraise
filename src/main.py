@@ -1,8 +1,4 @@
 import argparse
-import json
-from datetime import datetime
-from pathlib import Path
-
 from agent import Agent
 from banner import get_banner
 from llm import (
@@ -24,6 +20,8 @@ from tools.current_time import anthropic_current_time_tool
 from config import get_sunraise_version, get_provider_config_map
 from config import build_google_config, build_google_react_config
 
+from conversation import save_conversation, serialize_conversation
+
 from user import User
 
 from dotenv import load_dotenv
@@ -35,29 +33,9 @@ isdotenv = load_dotenv()
 PROVIDER_CONFIG_MAP = get_provider_config_map()
 
 
-# helper to debug conversation
-def debug_conversation(current_messages, conversation):
-    print("\n")
-    print("Debug:")
-    print("[current messages]:")
-    print(current_messages)
-    print("[conversation]:")
-    print(conversation)
-    print("\n")
-
-
-def save_conversation(agent, conversation):
-    """Save User/Agent conversation locally"""
-    print("Saving conversation")
-    folder_path = "conversation/conversation_" + datetime.now().strftime("%Y-%m-%d")
-    Path(folder_path).mkdir(exist_ok=True)
-    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S_%f")
-    with open(
-        f"{folder_path}/conversation_{agent.LLMProvider.name}_{timestamp}.json",
-        "w",
-    ) as f:
-        json.dump(conversation, f)
-
+# ---------------------------------------------------------------------------
+# MAIN FUNCTION
+# ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
 
@@ -93,7 +71,9 @@ if __name__ == "__main__":
 
     if isdotenv:
 
-        # creating agent
+        # ---------------------------------------------------------------------------
+        # ANTHROPIC PROVIDER
+        # ---------------------------------------------------------------------------
         if provider == "anthropic":
 
             tools = [anthropic_weather_tool, anthropic_current_time_tool]
@@ -107,6 +87,9 @@ if __name__ == "__main__":
             )
             a = Agent("anthropicAgent", anthropic_llm, "system")
 
+        # ---------------------------------------------------------------------------
+        # DUMMY PROVIDER
+        # ---------------------------------------------------------------------------
         elif provider == "dummy":
 
             dummy_llm = DummyProvider(
@@ -117,6 +100,9 @@ if __name__ == "__main__":
             )
             a = Agent("dummyAgent", dummy_llm, "system")
 
+        # ---------------------------------------------------------------------------
+        # GOOGLE PROVIDER
+        # ---------------------------------------------------------------------------
         elif provider == "google":
 
             # system instruction + tool config passed during LLM creation
@@ -136,6 +122,9 @@ if __name__ == "__main__":
             )
             a = Agent("googleAgent", google_llm, "system")
 
+        # ---------------------------------------------------------------------------
+        # MISTRAL PROVIDER
+        # ---------------------------------------------------------------------------
         elif provider == "mistral":
 
             tools = [mistral_weather_tool, mistral_current_time_tool]
@@ -151,6 +140,9 @@ if __name__ == "__main__":
             )
             a = Agent("mistralAgent", mistral_llm, "system")
 
+        # ---------------------------------------------------------------------------
+        # OPENAI PROVIDER
+        # ---------------------------------------------------------------------------
         elif provider == "openai":
 
             tools = [openai_weather_tool, openai_current_time_tool]
@@ -212,6 +204,9 @@ if __name__ == "__main__":
                 # saving conversation locally
                 if provider != "google" or react is None:
                     save_conversation(a, conversation)
+                else:
+                    serialized_conversation = serialize_conversation(conversation)
+                    conversation_path = save_conversation(a, serialized_conversation)
 
                 print("Bye!")
 
@@ -277,10 +272,6 @@ if __name__ == "__main__":
 
                     print(f"[agent]:{agent_response}")
 
-                    # ---------------------------------------------------------------------------
-                    # AGENT RESPONSE PRINT
-                    # ---------------------------------------------------------------------------
-
                     # appending agent_message to user-agent one turn messages
                     current_messages.append(agent_message)
 
@@ -292,6 +283,8 @@ if __name__ == "__main__":
                     if provider != "google" or react is None:
                         conversation.append(agent_message)
 
+                    # print("---- current conversation ----")
+                    # print(conversation)
                     conversation_index = conversation_index + 1
 
                 # ---------------------------------------------------------------------------
