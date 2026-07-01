@@ -434,7 +434,7 @@ class MistralProvider(LLMProvider):
                     # adding function message to tool_results
                     tool_results.append(function_message)
 
-                print(tool_results)
+                # print(tool_results)
 
                 # final response
                 response_with_tool = self.client.chat.complete(
