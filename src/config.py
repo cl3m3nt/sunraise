@@ -45,7 +45,7 @@ def get_provider_config_map():
             "name": "mistral",
             "model": LLM_MODEL_MISTRAL,
             "api_key": API_KEY_MISTRAL,
-            "temperature": 0.5,
+            "temperature": 0,
         },
         "openai": {
             "name": "openai",
