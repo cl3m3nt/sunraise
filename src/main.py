@@ -238,16 +238,34 @@ if __name__ == "__main__":
                         }
 
                     # ---------------------------------------------------------------------------
-                    # OTHER PROVIDER PROCESSING - DEFAULT
+                    # MISTRAL AGENT PROCESSING - DEFAULT AND REACT
                     # ---------------------------------------------------------------------------
 
                     elif provider == "mistral":
-                        agent_response = a(conversation)
 
-                        agent_message = {
-                            "role": "assistant",
-                            "content": agent_response,
-                        }
+                        print(
+                            f"{YELLOW}---- conversation step {conversation_index} ---{RESET}"
+                        )
+
+                        if not react:
+                            agent_response = a(conversation)
+
+                            agent_message = {
+                                "role": "assistant",
+                                "content": agent_response,
+                            }
+
+                        elif react:
+                            agent_response = a.react_call(conversation, react)
+                            agent_message = {
+                                "role": "assistant",
+                                "content": agent_response,
+                            }
+
+                    # ---------------------------------------------------------------------------
+                    # OTHER PROVIDER PROCESSING - DEFAULT
+                    # ---------------------------------------------------------------------------
+
                     elif provider == "openai":
                         agent_response = a(conversation)
 
