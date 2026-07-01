@@ -375,22 +375,6 @@ class MistralProvider(LLMProvider):
 
         message = response.choices[0].message
 
-        # ---------------------------------------------------------------------------
-        # Testing REACT loop within __call__
-        # ---------------------------------------------------------------------------
-
-        # testing extract_text
-        text = self.extract_text(message)
-        print(text)
-
-        # testing extract_function_calls
-        self.extract_function_calls(message)
-
-        # testing react_loop
-        # print("--- react loop start ---")
-        # self.react_call(conversation,3)
-        # print("--- react loop end ---")
-
         if getattr(message, "tool_calls", None):
             tool_calls = [
                 item
