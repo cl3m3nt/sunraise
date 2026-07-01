@@ -449,10 +449,8 @@ class MistralProvider(LLMProvider):
             return response.choices[0].message.content
 
     def extract_text(self, model_turn) -> str:
-        """Extract Text from LLM response"""
-        if model_turn.content is not None:
-            text = model_turn.content
-        return text
+        """Extract text content from a Mistral message."""
+        return model_turn.content or ""
 
     def extract_function_calls(self, model_turn):
         """Extract the function_call part of a LLM (Actions)"""
