@@ -104,7 +104,9 @@ class AnthropicProvider(LLMProvider):
 
     def extract_text(self, model_turn) -> str:
         """Extract text content from an Anthropic message."""
-        texts = [block.text for block in model_turn.content if getattr(block, "text", None)]
+        texts = [
+            block.text for block in model_turn.content if getattr(block, "text", None)
+        ]
         return "\n".join(texts).strip()
 
     def extract_function_calls(self, model_turn):
