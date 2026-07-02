@@ -273,13 +273,29 @@ if __name__ == "__main__":
                             "role": "assistant",
                             "content": agent_response,
                         }
+
+                    # ---------------------------------------------------------------------------
+                    # ANTHROPIC AGENT PROCESSING - DEFAULT AND REACT
+                    # ---------------------------------------------------------------------------
                     elif provider == "anthropic":
-                        agent_response = a(conversation)
+                        print(
+                            f"{YELLOW}---- conversation step {conversation_index} ---{RESET}"
+                        )
+                        if not react:
+                            agent_response = a(conversation)
+
+                        elif react:
+                            agent_response = a.react_call(conversation, react)
 
                         agent_message = {
                             "role": "assistant",
                             "content": agent_response,
                         }
+
+                    # ---------------------------------------------------------------------------
+                    # DUMMY AGENT PROCESSING - DEFAULT
+                    # ---------------------------------------------------------------------------
+
                     elif provider == "dummy":
                         agent_message = a(user_prompt)
                         agent_response = a(user_prompt)
