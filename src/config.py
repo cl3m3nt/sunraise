@@ -27,7 +27,7 @@ def get_provider_config_map():
             "name": "anthropic",
             "model": LLM_MODEL_CLAUDE,
             "api_key": API_KEY_CLAUDE,
-            "temperature": 0.5,
+            "temperature": 0,
         },
         "dummy": {
             "name": "dummy",

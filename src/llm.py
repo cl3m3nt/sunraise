@@ -102,6 +102,87 @@ class AnthropicProvider(LLMProvider):
 
             return response.content[0].text
 
+    def extract_text(self, model_turn) -> str:
+        """Extract text content from an Anthropic message."""
+        texts = [
+            block.text for block in model_turn.content if getattr(block, "text", None)
+        ]
+        return "\n".join(texts).strip()
+
+    def extract_function_calls(self, model_turn):
+        """Extract the tool_call of the LLM (Actions)"""
+        tool_calls = [block for block in model_turn.content if block.type == "tool_use"]
+        return tool_calls
+
+    def react_call(self, conversation, max_steps):
+
+        # defining tool from self.args
+        tools = list(self.args)
+
+        for step in range(1, max_steps + 1):
+
+            # Initial response from model
+            response = self.client.messages.create(
+                model=self.model, max_tokens=1000, messages=conversation, tools=tools
+            )
+
+            # Defining model turn
+            model_turn = response
+            print(f"{BLUE}--- model turn {step} ---{RESET}")
+            # print(model_turn)
+
+            # Extract Text
+            thought = self.extract_text(model_turn)
+
+            # Extract Tool calls
+            tool_calls = self.extract_function_calls(model_turn)
+
+            if thought:
+                print(f"    [thought {step}]: {thought}")
+
+            # Exiting ReAct loop
+            if not tool_calls:
+                return thought
+
+            # Preparing input with tool calls
+            if tool_calls:
+                conversation.append({"role": "assistant", "content": response.content})
+
+            # Actions
+            tool_results = []
+            for tc in tool_calls:
+                print(f"    [action {step}]: {tc.name}({tc.input})")
+                tool_function = TOOL_SWITCH.get(tc.name)
+                tool_function_args = tc.input
+
+                if tool_function is None:
+                    result = f"Error: unknown tool '{tc.name}'"
+                else:
+                    try:
+                        result = tool_function(**tool_function_args)
+                    except Exception as exc:
+                        result = f"Error in ReAct loop while running {tc.name}: {exc}"
+                print(f"    [observation {step}]: {result}")
+
+                tool_results.append(
+                    {
+                        "type": "tool_result",
+                        "tool_use_id": tc.id,
+                        "content": json.dumps(result),
+                    }
+                )
+
+            # all tool_result concatenated as prepared_tool_result
+            if tool_results:
+                prepared_tool_result = {"role": "user", "content": tool_results}
+
+                conversation.append(prepared_tool_result)
+
+        budget_content = "Reached the maximum number of reasoning steps without a final answer. Ask to finalize."
+        budget_message = {"role": "user", "content": budget_content}
+        conversation.append(budget_message)
+        return budget_content
+
 
 class DummyProvider(LLMProvider):
     provider = "dummy"
@@ -180,10 +261,6 @@ class GoogleProvider(LLMProvider):
     def extract_text(self, model_turn) -> str:
         """Extract Text from LLM response"""
 
-        # BLUE = "\033[38;5;117m"
-        # GREEN = "\033[38;5;46m"  # bright green   # sky blue
-        # RESET = "\033[0m"
-
         texts = []
 
         for part in model_turn.parts:
@@ -193,44 +270,22 @@ class GoogleProvider(LLMProvider):
                 # print(text)
                 texts.append(text)
 
-            # else:
-            # print(f"{BLUE}---- text ----{RESET}")
-            #   print("No Text part")
-
         return "\n".join(texts).strip()
 
     def extract_function_calls(self, model_turn):
         """Extract the function_call part of a LLM (Actions)"""
 
-        # BLUE = "\033[38;5;117m"
-        # GREEN = "\033[38;5;46m"  # bright green   # sky blue
-        # RESET = "\033[0m"
-
-        # print("----- from extract function call -----")
         function_calls = []
 
-        # print(response)
-        # print("parts")
         for part in model_turn.parts:
-            # print("------part------")
-            # print(part)
 
             if getattr(part, "function_call", None):
                 function_call = part.function_call
-                # print(f"{GREEN}---- function_call ----{RESET}")
-                # print(function_call)
                 function_calls.append(function_call)
-            # else:
-            # In case there is a no tool call
-            # print(f"{GREEN}---- function_call ----{RESET}")
-            #   print("No Function call part")
 
         return function_calls
 
     def react_call(self, conversation, max_steps):
-
-        # init react_conversation from User/Agent conversation
-        # react_conversation = list(conversation)
 
         for step in range(1, max_steps + 1):
 
@@ -498,8 +553,6 @@ class MistralProvider(LLMProvider):
             # Multiple or parallel function calls
             function_calls = self.extract_function_calls(model_turn)
             if function_calls is not None:
-                # print(f"{GREEN}--- REASON ---{RESET}")
-                # print(function_calls)
                 conversation.append(function_calls)
 
             if thought:
@@ -508,16 +561,11 @@ class MistralProvider(LLMProvider):
             # Case where there is no tool_call - Exiting ReAct loop
             if not model_turn.tool_calls:
                 return model_turn.content
-                # then exit the ReAct loop
-
-            # print(f"{GREEN}--- ACTION ---{RESET}")
-            # print(function_calls["tool_calls"])
 
             if function_calls["tool_calls"] is not None:
                 tool_calls = function_calls["tool_calls"]
 
                 for tc in tool_calls:
-                    # print("--------- loop hello ----------")
                     args = json.loads(tc["function"]["arguments"])
                     print(f"    [action {step}]: {tc["function"]["name"]}({args})")
                     tool_function = TOOL_SWITCH.get(tc["function"]["name"])
@@ -529,7 +577,6 @@ class MistralProvider(LLMProvider):
                             result = tool_function(**args)
                         except Exception as exc:
                             result = f"Error in ReAct loop while running {tc["function"]["name"]}: {exc}"
-                    # print(f"{GREEN}--- OBSERVATION ---{RESET}")
                     print(f"    [observation {step}]: {result}")
 
                     prepared_observation = {
@@ -540,7 +587,6 @@ class MistralProvider(LLMProvider):
                     }
 
                     conversation.append(prepared_observation)
-                # print(conversation)
         budget_content = "Reached the maximum number of reasoning steps without a final answer. Ask to finalize."
         budget_message = {"role": "assistant", "content": budget_content}
         conversation.append(budget_message)
