@@ -147,6 +147,8 @@ flowchart LR
     User["User (CLI)"] --> Main["main.py"]
     Main --> Agent["Agent"]
     Agent --> LLM["LLMProvider"]
+    Agent --> ReAct
+    ReAct --> Agent
     LLM --> Anthropic
     LLM --> Google
     LLM --> OpenAI
