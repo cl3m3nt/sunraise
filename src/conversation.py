@@ -3,6 +3,8 @@ import json
 from datetime import datetime
 from pathlib import Path
 from google.genai import types
+from openai.types.responses import ResponseFunctionToolCall, ResponseReasoningItem
+from anthropic.types import TextBlock, ToolUseBlock
 
 _BYTES_KEY = "__bytes__"
 
@@ -43,7 +45,7 @@ def _encode_bytes(obj):
     return obj
 
 
-def serialize_conversation(conversation):
+def serialize_google_conversation(conversation):
     """Faithful, JSON-safe view of a mixed list (plain dicts + genai Content)."""
     out = []
     for item in conversation:
@@ -51,4 +53,29 @@ def serialize_conversation(conversation):
             out.append(_encode_bytes(item.model_dump(exclude_none=True)))
         else:
             out.append(_encode_bytes(item))
+    return out
+
+
+def serialize_openai_conversation(conversation):
+    """Helper to serialize ResponseFunctionToolCall from openai conversation"""
+    out = []
+    for c in conversation:
+        if type(c) in [ResponseFunctionToolCall, ResponseReasoningItem]:
+            c = c.to_json()
+        out.append(c)
+    return out
+
+
+def serialize_anthropic_conversation(conversation):
+    """Helper to serialize TextBlock and ToolBlock from anthropic conversation"""
+    out = []
+    for c in conversation:
+        new_blocks = []
+        for block in c["content"]:
+            if type(block) in [TextBlock, ToolUseBlock]:
+                block = block.to_json()
+                new_blocks.append(block)
+        if new_blocks != []:
+            c["content"] = new_blocks
+        out.append(c)
     return out
