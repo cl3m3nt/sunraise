@@ -20,7 +20,12 @@ from tools.current_time import anthropic_current_time_tool
 from config import get_sunraise_version, get_provider_config_map
 from config import build_google_config, build_google_react_config
 
-from conversation import save_conversation, serialize_conversation
+from conversation import (
+    save_conversation,
+    serialize_google_conversation,
+    serialize_openai_conversation,
+    serialize_anthropic_conversation,
+)
 
 from user import User
 
@@ -202,10 +207,26 @@ if __name__ == "__main__":
                 active_conversation = False
 
                 # saving conversation locally
-                if provider != "google" or react is None:
+                if react is None or (
+                    provider != "google"
+                    and provider != "openai"
+                    and provider != "anthropic"
+                ):
                     save_conversation(a, conversation)
-                else:
-                    serialized_conversation = serialize_conversation(conversation)
+                elif provider == "google":
+                    serialized_conversation = serialize_google_conversation(
+                        conversation
+                    )
+                    conversation_path = save_conversation(a, serialized_conversation)
+                elif provider == "openai":
+                    serialized_conversation = serialize_openai_conversation(
+                        conversation
+                    )
+                    conversation_path = save_conversation(a, serialized_conversation)
+                elif provider == "anthropic":
+                    serialized_conversation = serialize_anthropic_conversation(
+                        conversation
+                    )
                     conversation_path = save_conversation(a, serialized_conversation)
 
                 print("Bye!")
@@ -263,11 +284,18 @@ if __name__ == "__main__":
                             }
 
                     # ---------------------------------------------------------------------------
-                    # OTHER PROVIDER PROCESSING - DEFAULT
+                    # OPENAI AGENT PROCESSING - DEFAULT AND REACT
                     # ---------------------------------------------------------------------------
 
                     elif provider == "openai":
-                        agent_response = a(conversation)
+                        print(
+                            f"{YELLOW}---- conversation step {conversation_index} ---{RESET}"
+                        )
+                        if not react:
+                            agent_response = a(conversation)
+
+                        elif react:
+                            agent_response = a.react_call(conversation, react)
 
                         agent_message = {
                             "role": "assistant",
