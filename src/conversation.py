@@ -60,8 +60,11 @@ def serialize_openai_conversation(conversation):
     """Helper to serialize ResponseFunctionToolCall from openai conversation"""
     out = []
     for c in conversation:
-        if type(c) in [ResponseFunctionToolCall, ResponseReasoningItem]:
-            c = c.to_json()
+        if isinstance(c, (ResponseFunctionToolCall, ResponseReasoningItem)):
+            # to_json() returns a JSON string; convert to a plain Python object for json.dump
+            c = json.loads(c.to_json())
+        # if type(c) in [ResponseFunctionToolCall, ResponseReasoningItem]:
+        #   c = c.to_json()
         out.append(c)
     return out
 
@@ -75,7 +78,9 @@ def serialize_anthropic_conversation(conversation):
             if type(block) in [TextBlock, ToolUseBlock]:
                 block = block.to_json()
                 new_blocks.append(block)
-        if new_blocks != []:
-            c["content"] = new_blocks
+            else:
+                new_blocks.append(block)
+        if new_blocks != c["content"]:
+            c = {**c, "content": new_blocks}
         out.append(c)
     return out
