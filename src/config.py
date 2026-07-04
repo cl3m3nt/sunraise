@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-SUNRAISE_VERSION = "v0.1.1"
+SUNRAISE_VERSION = "v0.1.2"
 LLM_MODEL_GEMINI = os.getenv("LLM_MODEL_GEMINI")
 API_KEY_GEMINI = os.getenv("API_KEY_GEMINI")
 LLM_MODEL_CLAUDE = os.getenv("LLM_MODEL_CLAUDE")
