@@ -11,10 +11,12 @@ from llm import (
 )
 
 from tools.weather import google_weather_tool
+from tools.weather import gemma4_weather_tool
 from tools.weather import mistral_weather_tool
 from tools.weather import openai_weather_tool
 from tools.weather import anthropic_weather_tool
 from tools.current_time import google_current_time_tool
+from tools.current_time import gemma4_current_time_tool
 from tools.current_time import mistral_current_time_tool
 from tools.current_time import openai_current_time_tool
 from tools.current_time import anthropic_current_time_tool
@@ -134,12 +136,15 @@ if __name__ == "__main__":
         elif provider == "gemma4":
 
             # system instruction + tool config passed during LLM creation
-            tools = [google_weather_tool, google_current_time_tool]
+            tools = [gemma4_weather_tool, gemma4_current_time_tool]
+            gemma4_config = None
 
+            """
             if react is not None:
                 google_config = build_google_react_config(tools)
             else:
                 google_config = build_google_config(tools)
+            """
 
             gemma4_llm = Gemma4Provider(
                 provider_cfg["name"],
@@ -147,7 +152,8 @@ if __name__ == "__main__":
                 provider_cfg["api_key"],
                 provider_cfg["base_url"],
                 provider_cfg["temperature"],
-                google_config,
+                gemma4_config,
+                *tools,
             )
             a = Agent("gemma4Agent", gemma4_llm, "system")
 

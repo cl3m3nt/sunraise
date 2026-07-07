@@ -357,16 +357,92 @@ class Gemma4Provider(LLMProvider):
 
     def __call__(self, conversation) -> str:
         # defining tool from self.args
-        # tools = list(self.args)
-
-        print(conversation)
+        tools = list(self.args)
 
         # initial response
         response = self.client.chat.completions.create(
-            model=self.model, messages=conversation, temperature=self.temperature
+            model=self.model,
+            messages=conversation,
+            temperature=self.temperature,
+            tools=tools,
         )
 
-        return response.choices[0].message.content
+        message = response.choices[0].message
+
+        # tool_calls built from item - similar to MistralAI api definition
+        if getattr(message, "tool_calls", None):
+            tool_calls = [
+                item
+                for item in response.choices[0].message.tool_calls
+                if item.type == "function"
+            ]
+
+            if tool_calls:
+
+                # tool_result definition
+                tool_results = []
+
+                tool_switch = {
+                    "get_weather": get_weather,
+                    "get_current_time": get_current_time,
+                }
+
+                # the assistant_tool_message is required in the conversation by Mistral API
+                assistant_tool_message = {
+                    "role": "assistant",
+                    "content": message.content,
+                    "tool_calls": [
+                        {
+                            "id": tool_call.id,
+                            "type": "function",  # expected by openai chatCompletion endpoint, different from Mistral
+                            "function": {
+                                "name": tool_call.function.name,
+                                "arguments": tool_call.function.arguments,
+                            },
+                        }
+                        for tool_call in (
+                            message.tool_calls
+                        )  # iterating over tools here
+                    ],
+                }
+                # adding assistant_tool_message to tool_results
+                tool_results.append(assistant_tool_message)
+
+                for tool_call in tool_calls:
+
+                    print(
+                        "TOOL CALL:",
+                        tool_call.function.name,
+                        tool_call.function.arguments,
+                    )
+                    tool_function = tool_switch[tool_call.function.name]
+                    tool_func_args = json.loads(tool_call.function.arguments)
+
+                    result = tool_function(**tool_func_args)
+
+                    function_message = {
+                        "role": "tool",
+                        "name": tool_call.function.name,
+                        "content": json.dumps(result),
+                        "tool_call_id": tool_call.id,
+                    }
+
+                    # adding function message to tool_results
+                    tool_results.append(function_message)
+
+                # final response
+                response_with_tool = self.client.chat.completions.create(
+                    model=self.model,
+                    messages=conversation + tool_results,
+                    temperature=self.temperature,
+                    tools=tools,
+                    stream=False,
+                )
+
+                return response_with_tool.choices[0].message.content
+
+        else:
+            return response.choices[0].message.content
 
 
 class OpenAIProvider(LLMProvider):
