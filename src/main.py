@@ -5,6 +5,7 @@ from llm import (
     AnthropicProvider,
     DummyProvider,
     GoogleProvider,
+    Gemma4Provider,
     OpenAIProvider,
     MistralProvider,
 )
@@ -54,7 +55,7 @@ if __name__ == "__main__":
         "--provider",
         type=str,
         help="provider name",
-        choices=["anthropic", "dummy", "google", "mistral", "openai"],
+        choices=["anthropic", "dummy", "google", "gemma4", "mistral", "openai"],
         default="dummy",
     )
     parser.add_argument(
@@ -128,6 +129,29 @@ if __name__ == "__main__":
             a = Agent("googleAgent", google_llm, "system")
 
         # ---------------------------------------------------------------------------
+        # GEMMA4 PROVIDER
+        # ---------------------------------------------------------------------------
+        elif provider == "gemma4":
+
+            # system instruction + tool config passed during LLM creation
+            tools = [google_weather_tool, google_current_time_tool]
+
+            if react is not None:
+                google_config = build_google_react_config(tools)
+            else:
+                google_config = build_google_config(tools)
+
+            gemma4_llm = Gemma4Provider(
+                provider_cfg["name"],
+                provider_cfg["model"],
+                provider_cfg["api_key"],
+                provider_cfg["base_url"],
+                provider_cfg["temperature"],
+                google_config,
+            )
+            a = Agent("gemma4Agent", gemma4_llm, "system")
+
+        # ---------------------------------------------------------------------------
         # MISTRAL PROVIDER
         # ---------------------------------------------------------------------------
         elif provider == "mistral":
@@ -184,17 +208,18 @@ if __name__ == "__main__":
             # ---------------------------------------------------------------------------
 
             user_prompt = input("[user]:")
-            if provider == "google":
+            if provider == "anthropic":
+                user_message = {"role": "user", "content": user_prompt}
+            elif provider == "dummy":
+                user_message = user_prompt
+            elif provider == "google":
                 user_message = {"role": "user", "parts": [{"text": user_prompt}]}
+            elif provider == "gemma4":
+                user_message = {"role": "user", "content": user_prompt}
             elif provider == "mistral":
                 user_message = {"role": "user", "content": user_prompt}
             elif provider == "openai":
                 user_message = {"role": "user", "content": user_prompt}
-            elif provider == "anthropic":
-                user_message = {"role": "user", "content": user_prompt}
-            # print(user_message)
-            elif provider == "dummy":
-                user_message = user_prompt
 
             # For all provider
             # store current user - agent messages
@@ -213,18 +238,23 @@ if __name__ == "__main__":
                     and provider != "anthropic"
                 ):
                     save_conversation(a, conversation)
+                elif provider == "anthropic":
+                    serialized_conversation = serialize_anthropic_conversation(
+                        conversation
+                    )
+                    conversation_path = save_conversation(a, serialized_conversation)
                 elif provider == "google":
+                    serialized_conversation = serialize_google_conversation(
+                        conversation
+                    )
+                    conversation_path = save_conversation(a, serialized_conversation)
+                elif provider == "gemma4":
                     serialized_conversation = serialize_google_conversation(
                         conversation
                     )
                     conversation_path = save_conversation(a, serialized_conversation)
                 elif provider == "openai":
                     serialized_conversation = serialize_openai_conversation(
-                        conversation
-                    )
-                    conversation_path = save_conversation(a, serialized_conversation)
-                elif provider == "anthropic":
-                    serialized_conversation = serialize_anthropic_conversation(
                         conversation
                     )
                     conversation_path = save_conversation(a, serialized_conversation)
@@ -235,7 +265,7 @@ if __name__ == "__main__":
             else:
                 try:
 
-                    YELLOW = "\033[38;5;220m"  # yellow
+                    YELLOW = "\033[38;5;220m"
                     RESET = "\033[0m"
 
                     # ---------------------------------------------------------------------------
@@ -256,6 +286,26 @@ if __name__ == "__main__":
                         agent_message = {
                             "role": "model",
                             "parts": [{"text": agent_response}],
+                        }
+
+                    # ---------------------------------------------------------------------------
+                    # GEMMA4 AGENT PROCESSING - DEFAULT AND REACT
+                    # ---------------------------------------------------------------------------
+
+                    if provider == "gemma4":
+
+                        print(
+                            f"{YELLOW}---- conversation step {conversation_index} ---{RESET}"
+                        )
+                        if not react:
+                            agent_response = a(conversation)
+
+                        elif react:
+                            agent_response = a.react_call(conversation, react)
+
+                        agent_message = {
+                            "role": "assistant",
+                            "content": agent_response,
                         }
 
                     # ---------------------------------------------------------------------------

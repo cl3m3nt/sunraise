@@ -315,10 +315,6 @@ class GoogleProvider(LLMProvider):
                 return thought or response.text
 
             # Otherwise execute each requested tool and feed observations back.
-            # This section is subject to non-deterministic behavior
-            # All tools can be call executed in 1 ReAct turn if // tool call
-            # Or tools can be executed sequentially in multiple turns
-            # Temperature and prompt influence this process
             observation_parts = []
             for fc in function_calls:
                 print(f"  [action {step}]: {fc.name}({dict(fc.args)})")
@@ -347,6 +343,30 @@ class GoogleProvider(LLMProvider):
             types.Content(role="model", parts=[types.Part(text=budget_message)])
         )
         return budget_message
+
+
+class Gemma4Provider(LLMProvider):
+    provider = "gemma4"
+
+    def __init__(self, name, model, api_key, base_url, temperature, config, *args):
+        super().__init__(name, model, api_key, temperature)
+        self.base_url = base_url  # extra base_url attribute for "local" gemma4 model
+        self.client = OpenAI(api_key=self.api_key, base_url=self.base_url)
+        self.config = config
+        self.args = args
+
+    def __call__(self, conversation) -> str:
+        # defining tool from self.args
+        # tools = list(self.args)
+
+        print(conversation)
+
+        # initial response
+        response = self.client.chat.completions.create(
+            model=self.model, messages=conversation, temperature=self.temperature
+        )
+
+        return response.choices[0].message.content
 
 
 class OpenAIProvider(LLMProvider):
