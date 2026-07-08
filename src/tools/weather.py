@@ -18,7 +18,7 @@ google_weather_tool = {
     },
 }
 
-# get_current_time config definition for gemma4
+# get_weather config definition for gemma4
 gemma4_weather_tool = {
     "type": "function",
     "function": {
@@ -27,8 +27,8 @@ gemma4_weather_tool = {
         "parameters": {
             "type": "object",
             "properties": {"city": {"type": "string", "description": "City name"}},
+            "required": ["city"],
         },
-        "required": ["city"],
     },
 }
 

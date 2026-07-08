@@ -29,8 +29,8 @@ gemma4_current_time_tool = {
             "properties": {
                 "timezone": {"type": "string", "description": "timezone name"}
             },
+            "required": ["timezone"],
         },
-        "required": ["timezone"],
     },
 }
 
