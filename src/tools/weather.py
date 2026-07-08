@@ -18,6 +18,20 @@ google_weather_tool = {
     },
 }
 
+# get_weather config definition for gemma4
+gemma4_weather_tool = {
+    "type": "function",
+    "function": {
+        "name": "get_weather",
+        "description": "Get the current weather for a city",
+        "parameters": {
+            "type": "object",
+            "properties": {"city": {"type": "string", "description": "City name"}},
+            "required": ["city"],
+        },
+    },
+}
+
 # get_weather tool config definition for mistral
 mistral_weather_tool = {
     "type": "function",

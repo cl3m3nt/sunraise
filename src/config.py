@@ -5,12 +5,20 @@ from dotenv import load_dotenv
 load_dotenv()
 
 SUNRAISE_VERSION = "v0.1.2"
+
 LLM_MODEL_GEMINI = os.getenv("LLM_MODEL_GEMINI")
 API_KEY_GEMINI = os.getenv("API_KEY_GEMINI")
+
+LLM_MODEL_GEMMA4 = os.getenv("LLM_MODEL_GEMMA4")
+API_KEY_GEMMA4 = os.getenv("API_KEY_GEMMA4")
+BASE_URL_GEMMA4 = os.getenv("BASE_URL_GEMMA4")
+
 LLM_MODEL_CLAUDE = os.getenv("LLM_MODEL_CLAUDE")
 API_KEY_CLAUDE = os.getenv("API_KEY_CLAUDE")
+
 LLM_MODEL_GPT = os.getenv("LLM_MODEL_GPT")
 API_KEY_GPT = os.getenv("API_KEY_GPT")
+
 LLM_MODEL_MISTRAL = os.getenv("LLM_MODEL_MISTRAL")
 API_KEY_MISTRAL = os.getenv("API_KEY_MISTRAL")
 
@@ -33,13 +41,20 @@ def get_provider_config_map():
             "name": "dummy",
             "model": "dummy model",
             "api_key": "api",
-            "temperature": 0.5,
+            "temperature": 0,
         },
         "google": {
             "name": "google",
             "model": LLM_MODEL_GEMINI,
             "api_key": API_KEY_GEMINI,
-            "temperature": 0.5,
+            "temperature": 0,
+        },
+        "gemma4": {
+            "name": "gemma4",
+            "model": LLM_MODEL_GEMMA4,
+            "base_url": BASE_URL_GEMMA4,
+            "api_key": API_KEY_GEMMA4,
+            "temperature": 0,
         },
         "mistral": {
             "name": "mistral",
@@ -51,7 +66,7 @@ def get_provider_config_map():
             "name": "openai",
             "model": LLM_MODEL_GPT,
             "api_key": API_KEY_GPT,
-            "temperature": 0.5,
+            "temperature": 0,
         },
     }
     return PROVIDER_CONFIG_MAP

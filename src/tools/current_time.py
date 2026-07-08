@@ -17,6 +17,24 @@ google_current_time_tool = {
     },
 }
 
+
+# get_current_time config definition for gemma4
+gemma4_current_time_tool = {
+    "type": "function",
+    "function": {
+        "name": "get_current_time",
+        "description": "Get the current date and time for a timezone",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "timezone": {"type": "string", "description": "timezone name"}
+            },
+            "required": ["timezone"],
+        },
+    },
+}
+
+
 # get_current_time config definition for mistral
 mistral_current_time_tool = {
     "type": "function",
