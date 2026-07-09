@@ -5,18 +5,18 @@ from llm import (
     AnthropicProvider,
     DummyProvider,
     GoogleProvider,
-    Gemma4Provider,
+    OpenLLMProvider,
     OpenAIProvider,
     MistralProvider,
 )
 
 from tools.weather import google_weather_tool
-from tools.weather import gemma4_weather_tool
+from tools.weather import openllm_weather_tool
 from tools.weather import mistral_weather_tool
 from tools.weather import openai_weather_tool
 from tools.weather import anthropic_weather_tool
 from tools.current_time import google_current_time_tool
-from tools.current_time import gemma4_current_time_tool
+from tools.current_time import openllm_current_time_tool
 from tools.current_time import mistral_current_time_tool
 from tools.current_time import openai_current_time_tool
 from tools.current_time import anthropic_current_time_tool
@@ -57,7 +57,7 @@ if __name__ == "__main__":
         "--provider",
         type=str,
         help="provider name",
-        choices=["anthropic", "dummy", "google", "gemma4", "mistral", "openai"],
+        choices=["anthropic", "dummy", "google", "openllm", "mistral", "openai"],
         default="dummy",
     )
     parser.add_argument(
@@ -131,13 +131,13 @@ if __name__ == "__main__":
             a = Agent("googleAgent", google_llm, "system")
 
         # ---------------------------------------------------------------------------
-        # GEMMA4 PROVIDER
+        # openllm PROVIDER
         # ---------------------------------------------------------------------------
-        elif provider == "gemma4":
+        elif provider == "openllm":
 
             # system instruction + tool config passed during LLM creation
-            tools = [gemma4_weather_tool, gemma4_current_time_tool]
-            gemma4_config = None
+            tools = [openllm_weather_tool, openllm_current_time_tool]
+            openllm_config = None
 
             """
             if react is not None:
@@ -146,16 +146,16 @@ if __name__ == "__main__":
                 google_config = build_google_config(tools)
             """
 
-            gemma4_llm = Gemma4Provider(
+            openllm_llm = OpenLLMProvider(
                 provider_cfg["name"],
                 provider_cfg["model"],
                 provider_cfg["api_key"],
                 provider_cfg["base_url"],
                 provider_cfg["temperature"],
-                gemma4_config,
+                openllm_config,
                 *tools,
             )
-            a = Agent("gemma4Agent", gemma4_llm, "system")
+            a = Agent("openllmAgent", openllm_llm, "system")
 
         # ---------------------------------------------------------------------------
         # MISTRAL PROVIDER
@@ -220,7 +220,7 @@ if __name__ == "__main__":
                 user_message = user_prompt
             elif provider == "google":
                 user_message = {"role": "user", "parts": [{"text": user_prompt}]}
-            elif provider == "gemma4":
+            elif provider == "openllm":
                 user_message = {"role": "user", "content": user_prompt}
             elif provider == "mistral":
                 user_message = {"role": "user", "content": user_prompt}
@@ -254,7 +254,7 @@ if __name__ == "__main__":
                         conversation
                     )
                     conversation_path = save_conversation(a, serialized_conversation)
-                elif provider == "gemma4":
+                elif provider == "openllm":
                     serialized_conversation = serialize_google_conversation(
                         conversation
                     )
@@ -295,10 +295,10 @@ if __name__ == "__main__":
                         }
 
                     # ---------------------------------------------------------------------------
-                    # GEMMA4 AGENT PROCESSING - DEFAULT AND REACT
+                    # OPENLLM AGENT PROCESSING - DEFAULT AND REACT
                     # ---------------------------------------------------------------------------
 
-                    if provider == "gemma4":
+                    if provider == "openllm":
 
                         print(
                             f"{YELLOW}---- conversation step {conversation_index} ---{RESET}"

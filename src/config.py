@@ -9,9 +9,9 @@ SUNRAISE_VERSION = "v0.1.2"
 LLM_MODEL_GEMINI = os.getenv("LLM_MODEL_GEMINI")
 API_KEY_GEMINI = os.getenv("API_KEY_GEMINI")
 
-LLM_MODEL_GEMMA4 = os.getenv("LLM_MODEL_GEMMA4")
-API_KEY_GEMMA4 = os.getenv("API_KEY_GEMMA4")
-BASE_URL_GEMMA4 = os.getenv("BASE_URL_GEMMA4")
+LLM_MODEL_OPENLLM = os.getenv("LLM_MODEL_OPENLLM")
+API_KEY_OPENLLM = os.getenv("API_KEY_OPENLLM")
+BASE_URL_OPENLLM = os.getenv("BASE_URL_OPENLLM")
 
 LLM_MODEL_CLAUDE = os.getenv("LLM_MODEL_CLAUDE")
 API_KEY_CLAUDE = os.getenv("API_KEY_CLAUDE")
@@ -49,11 +49,11 @@ def get_provider_config_map():
             "api_key": API_KEY_GEMINI,
             "temperature": 0,
         },
-        "gemma4": {
-            "name": "gemma4",
-            "model": LLM_MODEL_GEMMA4,
-            "base_url": BASE_URL_GEMMA4,
-            "api_key": API_KEY_GEMMA4,
+        "openllm": {
+            "name": "openllm",
+            "model": LLM_MODEL_OPENLLM,
+            "base_url": BASE_URL_OPENLLM,
+            "api_key": API_KEY_OPENLLM,
             "temperature": 0,
         },
         "mistral": {

@@ -16,7 +16,7 @@ TOOL_SWITCH = {
 }
 
 BLUE = "\033[38;5;117m"
-GREEN = "\033[38;5;46m"  # bright green   # sky blue
+GREEN = "\033[38;5;46m"
 YELLOW = "\033[38;5;220m"
 RESET = "\033[0m"
 
@@ -31,6 +31,18 @@ class LLMProvider(ABC):
 
     @abstractmethod
     def __call__(self, message):
+        pass
+
+    @abstractmethod
+    def extract_text(self, conversation, test):
+        pass
+
+    @abstractmethod
+    def extract_function_calls(self, conversation):
+        pass
+
+    @abstractmethod
+    def react_call(self, conversation, max_steps):
         pass
 
 
@@ -345,12 +357,12 @@ class GoogleProvider(LLMProvider):
         return budget_message
 
 
-class Gemma4Provider(LLMProvider):
-    provider = "gemma4"
+class OpenLLMProvider(LLMProvider):
+    provider = "openLLM"
 
     def __init__(self, name, model, api_key, base_url, temperature, config, *args):
         super().__init__(name, model, api_key, temperature)
-        self.base_url = base_url  # extra base_url attribute for "local" gemma4 model
+        self.base_url = base_url  # extra base_url attribute for open llm local model
         self.client = OpenAI(api_key=self.api_key, base_url=self.base_url)
         self.config = config
         self.args = args
@@ -445,7 +457,7 @@ class Gemma4Provider(LLMProvider):
             return response.choices[0].message.content
 
     def extract_text(self, model_turn) -> str:
-        """Extract text content from a Mistral message."""
+        """Extract text content from an openai compatible message."""
         return model_turn.choices[0].message.content or ""
 
     def extract_function_calls(self, model_turn):
