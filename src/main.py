@@ -1,14 +1,13 @@
 import argparse
 from agent import Agent
 from banner import get_banner
-from llm import (
-    AnthropicProvider,
-    DummyProvider,
-    GoogleProvider,
-    OpenLLMProvider,
-    OpenAIProvider,
-    MistralProvider,
-)
+
+from provider_anthropic import AnthropicProvider
+from provider_dummy import DummyProvider
+from provider_google import GoogleProvider
+from provider_openai import OpenAIProvider
+from provider_openllm import OpenLLMProvider
+from provider_mistral import MistralProvider
 
 from tools.weather import google_weather_tool
 from tools.weather import openllm_weather_tool
@@ -64,7 +63,7 @@ if __name__ == "__main__":
         "--react",
         type=int,
         help="react iteration steps",
-        choices=[3, 5, 7, 9],
+        choices=[3, 5, 7, 9, 100],
         default=None,
     )
     args = parser.parse_args()
