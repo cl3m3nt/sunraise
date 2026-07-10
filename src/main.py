@@ -33,6 +33,8 @@ from user import User
 
 from dotenv import load_dotenv
 
+from config import YELLOW, RESET
+
 # saving load_dotenv() as boolean for downstream check
 isdotenv = load_dotenv()
 
@@ -269,9 +271,6 @@ if __name__ == "__main__":
             # conversation loop
             else:
                 try:
-
-                    YELLOW = "\033[38;5;220m"
-                    RESET = "\033[0m"
 
                     # ---------------------------------------------------------------------------
                     # GOOGLE AGENT PROCESSING - DEFAULT AND REACT
