@@ -1,6 +1,8 @@
 from google.genai import types
 import os
 from dotenv import load_dotenv
+from tools.weather import get_weather
+from tools.current_time import get_current_time
 
 load_dotenv()
 
@@ -21,6 +23,17 @@ API_KEY_GPT = os.getenv("API_KEY_GPT")
 
 LLM_MODEL_MISTRAL = os.getenv("LLM_MODEL_MISTRAL")
 API_KEY_MISTRAL = os.getenv("API_KEY_MISTRAL")
+
+
+TOOL_SWITCH = {
+    "get_weather": get_weather,
+    "get_current_time": get_current_time,
+}
+
+BLUE = "\033[38;5;117m"
+GREEN = "\033[38;5;46m"
+YELLOW = "\033[38;5;220m"
+RESET = "\033[0m"
 
 
 def get_sunraise_version():

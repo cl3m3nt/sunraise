@@ -1,14 +1,13 @@
 import argparse
 from agent import Agent
 from banner import get_banner
-from llm import (
-    AnthropicProvider,
-    DummyProvider,
-    GoogleProvider,
-    OpenLLMProvider,
-    OpenAIProvider,
-    MistralProvider,
-)
+
+from provider_anthropic import AnthropicProvider
+from provider_dummy import DummyProvider
+from provider_google import GoogleProvider
+from provider_openai import OpenAIProvider
+from provider_openllm import OpenLLMProvider
+from provider_mistral import MistralProvider
 
 from tools.weather import google_weather_tool
 from tools.weather import openllm_weather_tool
@@ -33,6 +32,8 @@ from conversation import (
 from user import User
 
 from dotenv import load_dotenv
+
+from config import YELLOW, RESET
 
 # saving load_dotenv() as boolean for downstream check
 isdotenv = load_dotenv()
@@ -64,7 +65,7 @@ if __name__ == "__main__":
         "--react",
         type=int,
         help="react iteration steps",
-        choices=[3, 5, 7, 9],
+        choices=[3, 5, 7, 9, 100],
         default=None,
     )
     args = parser.parse_args()
@@ -270,9 +271,6 @@ if __name__ == "__main__":
             # conversation loop
             else:
                 try:
-
-                    YELLOW = "\033[38;5;220m"
-                    RESET = "\033[0m"
 
                     # ---------------------------------------------------------------------------
                     # GOOGLE AGENT PROCESSING - DEFAULT AND REACT
