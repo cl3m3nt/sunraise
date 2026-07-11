@@ -4,9 +4,10 @@ from dotenv import load_dotenv
 from tools.weather import get_weather
 from tools.current_time import get_current_time
 
+
 load_dotenv()
 
-SUNRAISE_VERSION = "v0.1.2"
+SUNRAISE_VERSION = "v0.1.3"
 
 LLM_MODEL_GEMINI = os.getenv("LLM_MODEL_GEMINI")
 API_KEY_GEMINI = os.getenv("API_KEY_GEMINI")
