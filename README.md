@@ -118,6 +118,7 @@ Notice:
 Example with a live provider:
 
 ```bash
+cd /src
 python main.py --provider google
 ```
 
@@ -157,6 +158,7 @@ Passing `--react N` enables a multi-step ReAct loop where the agent repeatedly:
 `N` must be one of `3`, `5`, `7`, `9`, `100`. Supported for `anthropic`, `google`, `openai`, `openllm`, `mistral`.
 
 ```bash
+cd src/
 python main.py --provider openai --react 3
 ```
 
