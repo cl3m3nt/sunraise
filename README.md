@@ -14,16 +14,22 @@ A modular Python CLI for multi-turn conversations with LLM agents.
 ```
 sunraise/
 ├── src/
-│   ├── agent.py             # Agent wrapper around an LLM provider
-│   ├── banner.py            # Colored CLI startup banner
-│   ├── config.py            # Provider config map, version, Google tool/system-instruction config
-│   ├── conversation.py      # Helpers functions to pre-process and store conversation on disk
-│   ├── llm.py               # Provider implementations (Anthropic, Google, OpenAI, Mistral, Dummy)
-│   ├── main.py              # CLI entry point (multi-turn chat)
-│   ├── user.py              # User identity model
-│   └── tools/
-│       ├── weather.py       # get_weather tool + per-provider schemas
-│       └── current_time.py  # get_current_time tool + per-provider schemas
+│   ├── agent.py                # Agent wrapper around an LLM provider
+│   ├── banner.py               # Colored CLI startup banner
+│   ├── config.py               # Provider config map, version, Google tool/system-instruction config
+│   ├── conversation.py         # Helpers functions to pre-process and store conversation on disk
+│   ├── llm.py                  # LLM Provider abstract class 
+│   ├── provider_anthropic.py   # Provider implementations for Anthropic LLM
+│   ├── provider_dummy.py       # Provider implementations for Dummy LLM
+│   ├── provider_google.py      # Provider implementations for Google LLM
+│   ├── provider_mistral.py     # Provider implementations for Mistral LLM
+│   ├── provider_openai.py      # Provider implementations for OpenAI LLM
+│   ├── provider_openllm.py     # Provider implementations for Google LLM
+│   ├── main.py                 # CLI entry point (multi-turn chat)
+│   ├── user.py                 # User identity model
+│   └── tools/  
+│       ├── weather.py          # get_weather tool + per-provider schemas
+│       └── current_time.py     # get_current_time tool + per-provider schemas
 └── requirements.txt
 ```
 
@@ -40,22 +46,31 @@ sunraise/
 cd /sunraise
 ```
 
-1. Create and activate a virtual environment:
+2. Create and activate a virtual or conda environment:
 
 ```bash
 python -m venv .venv
 source .venv/bin/activate
 ```
+or
+```bash
+conda create -n sunraise python=3.10
+conda activate sunraise
+```
 
-1. Install dependencies:
+3. Install dependencies:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-`requirements.txt` includes all provider SDKs (`google-genai`, `anthropic`, `openai`, `mistralai`), `python-dotenv`, the dev tooling (`pre-commit`, `black`, `ruff`), and `tzdata` on Windows (needed by `get_current_time`'s `zoneinfo`).
+`requirements.txt` includes:
+- all provider SDKs: `google-genai`, `anthropic`, `openai`, `mistralai`
+- the dev tooling: `pre-commit`, `black`, `ruff`
+- `tzdata` on Windows (needed by `get_current_time`'s `zoneinfo`)
+- `python-dotenv`
 
-1. IMPORTANT: Create a `.env` file in `src/` with your API keys and model names (see table below).
+4. IMPORTANT: Create a `.env` file in `src/` with your API keys and model names (see table below).
 
 API keys are free for Google Gemini and Mistral AI:
 
@@ -77,9 +92,13 @@ Add these to `src/.env` (only the variables for your chosen provider are require
 | `LLM_MODEL_GPT`     | OpenAI model name (e.g `gpt-5.5`)                |
 | `API_KEY_MISTRAL`   | Mistral API key                                  |
 | `LLM_MODEL_MISTRAL` | Mistral model name (e.g. `mistral-small-latest`) |
+| `API_KEY_OPENLLM`   | OpenLLM API key                                  |
+| `LLM_MODEL_OPENLLM` | OpenLLM name (e.g. `google/gemma-4-26b-a4b-qat`) for LM Studio |
+| `BASE_URL_OPENLLM`  | OpenLLM url  (e.g. `http://127.0.0.1:1234/v1`) for LM Studio  |
 
-
-Without a `.env` file, only the **dummy** provider works.
+Notice: 
+- Without a `.env` file, only the **dummy** provider works.
+- OpenLLM requires the extra BASE_URL_OPENLLM variable
 
 ## Usage
 
@@ -92,12 +111,14 @@ Without a `.env` file, only the **dummy** provider works.
 | `--provider anthropic` | Claude via Anthropic SDK              |
 | `--provider google`    | Gemini via Google GenAI SDK           |
 | `--provider openai`    | GPT via OpenAI SDK                    |
+| `--provider openllm`   | OpenLLM via LM Studio, Ollama, vLLM   |
 | `--provider mistral`   | Mistral via Mistral SDK               |
 
 
 Example with a live provider:
 
 ```bash
+cd /src
 python main.py --provider google
 ```
 
@@ -134,10 +155,11 @@ Passing `--react N` enables a multi-step ReAct loop where the agent repeatedly:
 3. Appends the observations back into the conversation
 4. Repeats until the model returns a final answer with no tool calls, or `N` steps are reached (a budget message is returned)
 
-`N` must be one of `3`, `5`, `7`, `9`. Supported for `anthropic`, `google`, `openai`, and `mistral`.
+`N` must be one of `3`, `5`, `7`, `9`, `100`. Supported for `anthropic`, `google`, `openai`, `openllm`, `mistral`.
 
 ```bash
-python main.py --provider openai --react 5
+cd src/
+python main.py --provider openai --react 3
 ```
 
 ### Architecture
@@ -152,6 +174,7 @@ flowchart LR
     LLM --> Anthropic
     LLM --> Google
     LLM --> OpenAI
+    LLM --> OpenLLM
     LLM --> Mistral
     LLM --> Dummy
 ```
