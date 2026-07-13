@@ -7,3 +7,4 @@ tzdata; platform_system == "Windows"
 pre-commit
 black
 ruff
+pyyaml
