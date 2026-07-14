@@ -19,8 +19,15 @@ from tools.current_time import openllm_current_time_tool
 from tools.current_time import mistral_current_time_tool
 from tools.current_time import openai_current_time_tool
 from tools.current_time import anthropic_current_time_tool
+from tools.read_skill import google_read_skill_tool
+
 from config import get_sunraise_version, get_provider_config_map
 from config import build_google_config, build_google_react_config
+from config import GOOGLE_SYSTEM_INSTRUCTION, GOOGLE_REACT_SYSTEM_INSTRUCTION
+
+from skills_loader import get_skills
+from skills_loader import SKILLS_DIR
+
 
 from conversation import (
     save_conversation,
@@ -115,12 +122,26 @@ if __name__ == "__main__":
         elif provider == "google":
 
             # system instruction + tool config passed during LLM creation
-            tools = [google_weather_tool, google_current_time_tool]
+            tools = [
+                google_weather_tool,
+                google_current_time_tool,
+                google_read_skill_tool,
+            ]
+            """
+            print(f"--- {GREEN} From main tool {RESET} ---")
+            for tool in tools:
+                print(f"{GREEN}Loading tool: {tool["name"]}{RESET}")
+            """
+            skills = get_skills(SKILLS_DIR)
 
             if react is not None:
-                google_config = build_google_react_config(tools)
+                google_config = build_google_react_config(
+                    GOOGLE_REACT_SYSTEM_INSTRUCTION, tools, skills
+                )
             else:
-                google_config = build_google_config(tools)
+                google_config = build_google_config(
+                    GOOGLE_SYSTEM_INSTRUCTION, tools, skills
+                )
 
             google_llm = GoogleProvider(
                 provider_cfg["name"],

@@ -3,6 +3,8 @@ import os
 from dotenv import load_dotenv
 from tools.weather import get_weather
 from tools.current_time import get_current_time
+from tools.read_skill import read_skill
+from skills_loader import render_skills_catalog
 
 
 load_dotenv()
@@ -29,6 +31,7 @@ API_KEY_MISTRAL = os.getenv("API_KEY_MISTRAL")
 TOOL_SWITCH = {
     "get_weather": get_weather,
     "get_current_time": get_current_time,
+    "read_skill": read_skill,
 }
 
 BLUE = "\033[38;5;117m"
@@ -86,7 +89,15 @@ def get_provider_config_map():
     return PROVIDER_CONFIG_MAP
 
 
-def build_google_config(tools):
+GOOGLE_SYSTEM_INSTRUCTION = """
+# System Instructions
+You are a helpful assistant.
+When weather is requested, you MUST use the get_weather tool.
+When current time is requested, you MUST use get_current_time tool.
+""".strip()
+
+
+def build_google_config(system_instruction, tools, skills):
     print("Using google default config.")
     if tools:
         tool_decl_list = []
@@ -106,13 +117,15 @@ def build_google_config(tools):
 
         # LLM general config, system instruction + tools (optional)
 
-        google_config = types.GenerateContentConfig(
-            system_instruction="""
-            You are a helpful assistant.
+        skills_catalog = render_skills_catalog(skills)
 
-            When weather is requested, you MUST use the get_weather tool.
-            When current time is requested, you MUST use get_current_time tool.
-            """,
+        system_instruction = system_instruction + "\n\n" + skills_catalog
+
+        # print(f"{GREEN}--- System instruction ---{RESET}")
+        # print(system_instruction)
+
+        google_config = types.GenerateContentConfig(
+            system_instruction=system_instruction,
             tools=[types.Tool(function_declarations=tool_decl_list)],
         )
     else:
@@ -122,6 +135,7 @@ def build_google_config(tools):
 
 
 GOOGLE_REACT_SYSTEM_INSTRUCTION = """
+    # System Instructions
     You are a helpful ReAct-style assistant.
 
     Reason step by step. When you need external information, call a tool instead of
@@ -133,7 +147,7 @@ GOOGLE_REACT_SYSTEM_INSTRUCTION = """
     """.strip()
 
 
-def build_google_react_config(tools):
+def build_google_react_config(system_instruction, tools, skills):
     print("Using google ReAct loop config.")
     if tools:
         tool_decl_list = []
@@ -153,8 +167,14 @@ def build_google_react_config(tools):
 
         # LLM general config, system instruction + tools (optional)
 
+        skills_catalog = render_skills_catalog(skills)
+        system_instruction = system_instruction + "\n\n" + skills_catalog
+
+        # print(f"{GREEN}--- System instruction ---{RESET}")
+        # print(system_instruction)
+
         react_google_config = types.GenerateContentConfig(
-            system_instruction=GOOGLE_REACT_SYSTEM_INSTRUCTION,
+            system_instruction=system_instruction,
             tools=[types.Tool(function_declarations=tool_decl_list)],
             temperature=0,
         )

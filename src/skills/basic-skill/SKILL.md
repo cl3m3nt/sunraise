@@ -9,7 +9,7 @@ description: Provide guidance to develop skills for agent.
 
 When providing guidance:
 
-1. Check which agent harness scope is developed
-2. Use appropriate agent harness skill
+1. Check if the user knows what is a skill
+2. Propose to get started creating a new skill 
 
 

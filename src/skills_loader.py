@@ -24,7 +24,7 @@ class Skill:
 def get_skills(skill_dir: str):
     """Get skills within a given skill directory"""
 
-    print(f"--- {GREEN} Hello from get_skills {RESET} ---")
+    print(f"--- {GREEN} From get_skills {RESET} ---")
 
     skills = []
 
@@ -75,6 +75,21 @@ def parse_skill(skill_path: str):
         return {}, lines, msg
 
 
+def render_skills_catalog(skills: list):
+    """Render skills catalog from a given skills list"""
+    lines = [
+        "## Available skills",
+        "",
+        "Each skill below is a set of on-demand instructions. When a user request "
+        "matches a skill, call the `read_skill` tool with the skill's exact `name` "
+        "to load its full instructions, then follow them.",
+        "",
+    ]
+    for skill in skills:
+        lines.append(f"- {skill.name}: {skill.description}")
+    return "\n".join(lines)
+
+
 if __name__ == "__main__":
 
     s = Skill("my-skill", "this is my first skill", "skill body", "skill path")
@@ -83,8 +98,9 @@ if __name__ == "__main__":
     skills = get_skills(skill_dir)
 
     for skill in skills:
-        print("--- discovered skill ---")
-        print(f"skill name: {skill.name}")
-        print(f"skill description: {skill.description}")
-        print(f"skill body head: \n{skill.body[:20]}")
-        print("\n")
+        print(skill)
+
+    skill_catalog = render_skills_catalog(skills)
+    print(f"{GREEN}--- skill catalog  ---{RESET}")
+    print(skill_catalog)
+    print(f"{GREEN}--- skill catalog end  ---{RESET}")
