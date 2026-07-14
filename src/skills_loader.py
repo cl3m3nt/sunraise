@@ -28,23 +28,26 @@ def get_skills(skill_dir: str):
 
     skills = []
 
-    skill_list = os.listdir(skill_dir)
-    if skill_list:
-        for skill_folder in skill_list:
-            if "SKILL.md" in os.listdir(skill_dir + "/" + skill_folder):
-                skill_path = skill_dir + "/" + skill_folder + "/" + "SKILL.md"
-                skill_metadata, skill_body, skill_msg = parse_skill(skill_path)
-                if skill_metadata and skill_body:
-                    s = Skill(
-                        skill_metadata["name"],
-                        skill_metadata["description"],
-                        skill_body,
-                        skill_path,
-                    )
-                    skills.append(s)
-        return skills
+    if os.path.isdir(skill_dir):
+        skill_list = os.listdir(skill_dir)
+        if skill_list:
+            for skill_folder in skill_list:
+                if "SKILL.md" in os.listdir(skill_dir + "/" + skill_folder):
+                    skill_path = skill_dir + "/" + skill_folder + "/" + "SKILL.md"
+                    skill_metadata, skill_body, skill_msg = parse_skill(skill_path)
+                    if skill_metadata and skill_body:
+                        s = Skill(
+                            skill_metadata["name"],
+                            skill_metadata["description"],
+                            skill_body,
+                            skill_path,
+                        )
+                        skills.append(s)
+            return skills
+        else:
+            print("There is no skills in given directory.")
     else:
-        print("There is no skills in given directory.")
+        return skills
 
 
 def parse_skill(skill_path: str):
@@ -85,7 +88,7 @@ def render_skills_catalog(skills: list):
         "to load its full instructions, then follow them.",
         "",
     ]
-    for skill in skills:
+    for skill in sorted(skills, key=lambda s: s.name):
         lines.append(f"- {skill.name}: {skill.description}")
     return "\n".join(lines)
 
