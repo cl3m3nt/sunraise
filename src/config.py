@@ -91,7 +91,15 @@ def get_provider_config_map():
 
 GOOGLE_SYSTEM_INSTRUCTION = """
 # System Instructions
-You are a helpful assistant.
+You are a helpful assistant named Google Sunraise.
+When weather is requested, you MUST use the get_weather tool.
+When current time is requested, you MUST use get_current_time tool.
+""".strip()
+
+
+MISTRAL_SYSTEM_INSTRUCTION = """
+# System Instructions
+You are a helpful assistant named Mistral Sunraise.
 When weather is requested, you MUST use the get_weather tool.
 When current time is requested, you MUST use get_current_time tool.
 """.strip()
@@ -134,9 +142,33 @@ def build_google_config(system_instruction, tools, skills):
     return google_config
 
 
+def build_mistral_system_prompt(system_instruction, skills):
+
+    skills_catalog = render_skills_catalog(skills)
+
+    system_instruction = system_instruction + "\n\n" + skills_catalog
+
+    system_prompt = {"role": "system", "content": system_instruction}
+
+    return system_prompt
+
+
 GOOGLE_REACT_SYSTEM_INSTRUCTION = """
     # System Instructions
-    You are a helpful ReAct-style assistant.
+    You are a helpful ReAct-style assistant named Google Sunraise.
+
+    Reason step by step. When you need external information, call a tool instead of
+    guessing. After you receive a tool result, decide whether you need another tool
+    call or whether you can give the final answer.
+
+    When weather is requested, you MUST use the get_weather tool.
+    When the current time is requested, you MUST use the get_current_time tool.
+    """.strip()
+
+
+MISTRAL_REACT_SYSTEM_INSTRUCTION = """
+    # System Instructions
+    You are a helpful ReAct-style assistant named Mistral Sunraise.
 
     Reason step by step. When you need external information, call a tool instead of
     guessing. After you receive a tool result, decide whether you need another tool

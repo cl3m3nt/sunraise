@@ -20,15 +20,29 @@ def read_skill(skill_name: str):
     return {"skill": skill_name, "body": s.body}
 
 
-# get_weather tool config definition for google
+# read_skill tool config definition for google
 google_read_skill_tool = {
     "name": "read_skill",
     "description": "Read a skill body",
     "parameters": {
         "type": "object",
         "properties": {
-            "skill_name": {"type": "string", "description": "agent skill"},
+            "skill_name": {"type": "string"},
         },
         "required": ["skill_name"],
+    },
+}
+
+# read_skill tool config definition for mistral
+mistral_read_skill_tool = {
+    "type": "function",
+    "function": {
+        "name": "read_skill",
+        "description": "Read a skill body",
+        "parameters": {
+            "type": "object",
+            "properties": {"skill_name": {"type": "string"}},
+            "required": ["skill_name"],
+        },
     },
 }

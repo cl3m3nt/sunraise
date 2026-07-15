@@ -20,10 +20,13 @@ from tools.current_time import mistral_current_time_tool
 from tools.current_time import openai_current_time_tool
 from tools.current_time import anthropic_current_time_tool
 from tools.read_skill import google_read_skill_tool
+from tools.read_skill import mistral_read_skill_tool
 
 from config import get_sunraise_version, get_provider_config_map
 from config import build_google_config, build_google_react_config
 from config import GOOGLE_SYSTEM_INSTRUCTION, GOOGLE_REACT_SYSTEM_INSTRUCTION
+from config import MISTRAL_SYSTEM_INSTRUCTION, MISTRAL_REACT_SYSTEM_INSTRUCTION
+from config import build_mistral_system_prompt
 
 from skills_loader import get_skills
 from skills_loader import SKILLS_DIR
@@ -121,17 +124,13 @@ if __name__ == "__main__":
         # ---------------------------------------------------------------------------
         elif provider == "google":
 
-            # system instruction + tool config passed during LLM creation
+            # Tools, Skills, System instructions
             tools = [
                 google_weather_tool,
                 google_current_time_tool,
                 google_read_skill_tool,
             ]
-            """
-            print(f"--- {GREEN} From main tool {RESET} ---")
-            for tool in tools:
-                print(f"{GREEN}Loading tool: {tool["name"]}{RESET}")
-            """
+
             skills = get_skills(SKILLS_DIR)
 
             if react is not None:
@@ -184,8 +183,16 @@ if __name__ == "__main__":
         # ---------------------------------------------------------------------------
         elif provider == "mistral":
 
-            tools = [mistral_weather_tool, mistral_current_time_tool]
-            mistral_config = None
+            tools = [
+                mistral_weather_tool,
+                mistral_current_time_tool,
+                mistral_read_skill_tool,
+            ]
+
+            if react is not None:
+                mistral_config = MISTRAL_REACT_SYSTEM_INSTRUCTION
+            else:
+                mistral_config = MISTRAL_SYSTEM_INSTRUCTION
 
             mistral_llm = MistralProvider(
                 provider_cfg["name"],
@@ -227,6 +234,19 @@ if __name__ == "__main__":
         conversation = []
 
         conversation_index = 0
+
+        # System Instruction initial configuration
+        if provider == "mistral":
+            """
+            system_prompt = {
+            "role": "system",
+            "content": a.LLMProvider.config
+            }
+            conversation.append(system_prompt)
+            """
+            skills = get_skills(SKILLS_DIR)
+            system_prompt = build_mistral_system_prompt(a.LLMProvider.config, skills)
+            conversation.append(system_prompt)
 
         while active_conversation:
             current_messages = []
