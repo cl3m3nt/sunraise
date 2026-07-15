@@ -237,13 +237,7 @@ if __name__ == "__main__":
 
         # System Instruction initial configuration
         if provider == "mistral":
-            """
-            system_prompt = {
-            "role": "system",
-            "content": a.LLMProvider.config
-            }
-            conversation.append(system_prompt)
-            """
+
             skills = get_skills(SKILLS_DIR)
             system_prompt = build_mistral_system_prompt(a.LLMProvider.config, skills)
             conversation.append(system_prompt)
