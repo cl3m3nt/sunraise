@@ -19,14 +19,18 @@ from tools.current_time import openllm_current_time_tool
 from tools.current_time import mistral_current_time_tool
 from tools.current_time import openai_current_time_tool
 from tools.current_time import anthropic_current_time_tool
+from tools.read_skill import anthropic_read_skill_tool
 from tools.read_skill import google_read_skill_tool
 from tools.read_skill import mistral_read_skill_tool
 
+
 from config import get_sunraise_version, get_provider_config_map
 from config import build_google_config, build_google_react_config
+from config import ANTHROPIC_SYSTEM_INSTRUCTION, ANTHROPIC_REACT_SYSTEM_INSTRUCTION
 from config import GOOGLE_SYSTEM_INSTRUCTION, GOOGLE_REACT_SYSTEM_INSTRUCTION
 from config import MISTRAL_SYSTEM_INSTRUCTION, MISTRAL_REACT_SYSTEM_INSTRUCTION
 from config import build_mistral_system_prompt
+from config import build_anthropic_system_prompt
 
 from skills_loader import get_skills
 from skills_loader import SKILLS_DIR
@@ -95,13 +99,29 @@ if __name__ == "__main__":
         # ---------------------------------------------------------------------------
         if provider == "anthropic":
 
-            tools = [anthropic_weather_tool, anthropic_current_time_tool]
+            tools = [
+                anthropic_weather_tool,
+                anthropic_current_time_tool,
+                anthropic_read_skill_tool,
+            ]
+
+            skills = get_skills(SKILLS_DIR)
+
+            if react is not None:
+                anthropic_config = build_anthropic_system_prompt(
+                    ANTHROPIC_REACT_SYSTEM_INSTRUCTION, skills
+                )
+            else:
+                anthropic_config = build_anthropic_system_prompt(
+                    ANTHROPIC_SYSTEM_INSTRUCTION, skills
+                )
 
             anthropic_llm = AnthropicProvider(
                 provider_cfg["name"],
                 provider_cfg["model"],
                 provider_cfg["api_key"],
                 provider_cfg["temperature"],
+                anthropic_config,
                 *tools,
             )
             a = Agent("anthropicAgent", anthropic_llm, "system")
