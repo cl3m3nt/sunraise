@@ -2,6 +2,7 @@ from mistralai.client import Mistral
 from llm import LLMProvider
 from tools.weather import get_weather
 from tools.current_time import get_current_time
+from tools.read_skill import read_skill
 
 import json
 
@@ -45,6 +46,7 @@ class MistralProvider(LLMProvider):
                 tool_switch = {
                     "get_weather": get_weather,
                     "get_current_time": get_current_time,
+                    "read_skill": read_skill,
                 }
 
                 # the assistant_tool_message is required in the conversation by Mistral API
