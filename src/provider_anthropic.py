@@ -2,6 +2,7 @@ import anthropic
 from llm import LLMProvider
 from tools.weather import get_weather
 from tools.current_time import get_current_time
+from tools.read_skill import read_skill
 import json
 
 from config import TOOL_SWITCH
@@ -11,9 +12,10 @@ from config import BLUE, RESET
 class AnthropicProvider(LLMProvider):
     provider = "anthropic"
 
-    def __init__(self, name, model, api_key, temperature, *args):
+    def __init__(self, name, model, api_key, temperature, config, *args):
         super().__init__(name, model, api_key, temperature)
         self.client = anthropic.Anthropic(api_key=self.api_key)
+        self.config = config
         self.args = args
 
     def __call__(self, conversation):
@@ -23,7 +25,11 @@ class AnthropicProvider(LLMProvider):
 
         # initial response
         response = self.client.messages.create(
-            model=self.model, max_tokens=1000, messages=conversation, tools=tools
+            model=self.model,
+            system=self.config,
+            max_tokens=1000,
+            messages=conversation,
+            tools=tools,
         )
 
         # tool_calls built from block
@@ -38,6 +44,7 @@ class AnthropicProvider(LLMProvider):
             tool_switch = {
                 "get_weather": get_weather,
                 "get_current_time": get_current_time,
+                "read_skill": read_skill,
             }
 
             # tool_result definition
@@ -66,6 +73,7 @@ class AnthropicProvider(LLMProvider):
             # final response
             response_with_tool = self.client.messages.create(
                 model=self.model,
+                system=self.config,
                 max_tokens=1000,
                 messages=conversation + prepared_input_with_tools,
                 tools=tools,
@@ -97,7 +105,11 @@ class AnthropicProvider(LLMProvider):
 
             # Initial response from model
             response = self.client.messages.create(
-                model=self.model, max_tokens=1000, messages=conversation, tools=tools
+                model=self.model,
+                system=self.config,
+                max_tokens=1000,
+                messages=conversation,
+                tools=tools,
             )
 
             # Defining model turn
