@@ -22,18 +22,21 @@ from tools.current_time import anthropic_current_time_tool
 from tools.read_skill import anthropic_read_skill_tool
 from tools.read_skill import google_read_skill_tool
 from tools.read_skill import openai_read_skill_tool
+from tools.read_skill import openllm_read_skill_tool
 from tools.read_skill import mistral_read_skill_tool
 
 
-from config import get_sunraise_version, get_provider_config_map
-from config import build_google_config, build_google_react_config
 from config import ANTHROPIC_SYSTEM_INSTRUCTION, ANTHROPIC_REACT_SYSTEM_INSTRUCTION
 from config import GOOGLE_SYSTEM_INSTRUCTION, GOOGLE_REACT_SYSTEM_INSTRUCTION
 from config import OPENAI_SYSTEM_INSTRUCTION, OPENAI_REACT_SYSTEM_INSTRUCTION
+from config import OPENLLM_SYSTEM_INSTRUCTION, OPENLLM_REACT_SYSTEM_INSTRUCTION
 from config import MISTRAL_SYSTEM_INSTRUCTION, MISTRAL_REACT_SYSTEM_INSTRUCTION
-from config import build_mistral_system_prompt
+from config import get_sunraise_version, get_provider_config_map
 from config import build_anthropic_system_prompt
+from config import build_google_config, build_google_react_config
 from config import build_openai_system_prompt
+from config import build_openllm_system_prompt
+from config import build_mistral_system_prompt
 
 from skills_loader import get_skills
 from skills_loader import SKILLS_DIR
@@ -175,20 +178,21 @@ if __name__ == "__main__":
             a = Agent("googleAgent", google_llm, "system")
 
         # ---------------------------------------------------------------------------
-        # openllm PROVIDER
+        # OPENLLM PROVIDER
         # ---------------------------------------------------------------------------
         elif provider == "openllm":
 
             # system instruction + tool config passed during LLM creation
-            tools = [openllm_weather_tool, openllm_current_time_tool]
-            openllm_config = None
+            tools = [
+                openllm_weather_tool,
+                openllm_current_time_tool,
+                openllm_read_skill_tool,
+            ]
 
-            """
             if react is not None:
-                google_config = build_google_react_config(tools)
+                openllm_config = OPENLLM_REACT_SYSTEM_INSTRUCTION
             else:
-                google_config = build_google_config(tools)
-            """
+                openllm_config = OPENLLM_SYSTEM_INSTRUCTION
 
             openllm_llm = OpenLLMProvider(
                 provider_cfg["name"],
@@ -272,11 +276,16 @@ if __name__ == "__main__":
 
         conversation_index = 0
 
-        # System Instruction initial configuration
+        # System Instruction initial configuration for Mistral and OpenLLM
         if provider == "mistral":
 
             skills = get_skills(SKILLS_DIR)
             system_prompt = build_mistral_system_prompt(a.LLMProvider.config, skills)
+            conversation.append(system_prompt)
+
+        elif provider == "openllm":
+            skills = get_skills(SKILLS_DIR)
+            system_prompt = build_openllm_system_prompt(a.LLMProvider.config, skills)
             conversation.append(system_prompt)
 
         while active_conversation:

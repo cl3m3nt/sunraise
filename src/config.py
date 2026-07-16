@@ -161,6 +161,30 @@ OPENAI_REACT_SYSTEM_INSTRUCTION = """
 
 
 # ---------------------------------------------------------------------------
+# OPENLLM SYSTEM PROMPT
+# ---------------------------------------------------------------------------
+
+OPENLLM_SYSTEM_INSTRUCTION = """
+# System Instructions
+You are a helpful assistant named OpenLLM Sunraise.
+When weather is requested, you MUST use the get_weather tool.
+When current time is requested, you MUST use get_current_time tool.
+""".strip()
+
+OPENLLM_REACT_SYSTEM_INSTRUCTION = """
+    # System Instructions
+    You are a helpful ReAct-style assistant named OpenLLM Sunraise.
+
+    Reason step by step. When you need external information, call a tool instead of
+    guessing. After you receive a tool result, decide whether you need another tool
+    call or whether you can give the final answer.
+
+    When weather is requested, you MUST use the get_weather tool.
+    When the current time is requested, you MUST use the get_current_time tool.
+    """.strip()
+
+
+# ---------------------------------------------------------------------------
 # MISTRAL SYSTEM PROMPT
 # ---------------------------------------------------------------------------
 
@@ -266,6 +290,17 @@ def build_openai_system_prompt(system_instruction, skills):
     skills_catalog = render_skills_catalog(skills)
 
     system_prompt = system_instruction + "\n\n" + skills_catalog
+
+    return system_prompt
+
+
+def build_openllm_system_prompt(system_instruction, skills):
+
+    skills_catalog = render_skills_catalog(skills)
+
+    system_instruction = system_instruction + "\n\n" + skills_catalog
+
+    system_prompt = {"role": "developer", "content": system_instruction}
 
     return system_prompt
 

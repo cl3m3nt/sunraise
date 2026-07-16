@@ -18,7 +18,7 @@ google_weather_tool = {
     },
 }
 
-# get_weather config definition for gemma4
+# get_weather config definition for openllm
 openllm_weather_tool = {
     "type": "function",
     "function": {
