@@ -1,10 +1,6 @@
 import anthropic
 from llm import LLMProvider
-from tools.weather import get_weather
-from tools.current_time import get_current_time
-from tools.read_skill import read_skill
 import json
-
 from config import TOOL_SWITCH
 from config import BLUE, RESET
 
@@ -41,18 +37,12 @@ class AnthropicProvider(LLMProvider):
                 {"role": "assistant", "content": response.content}
             )
 
-            tool_switch = {
-                "get_weather": get_weather,
-                "get_current_time": get_current_time,
-                "read_skill": read_skill,
-            }
-
             # tool_result definition
             tool_results = []
 
             for tool_call in tool_calls:
                 print("TOOL CALL:", tool_call.name, tool_call.input)
-                tool_function = tool_switch[tool_call.name]
+                tool_function = TOOL_SWITCH[tool_call.name]
                 tool_function_args = tool_call.input
                 result = tool_function(**tool_function_args)
 
