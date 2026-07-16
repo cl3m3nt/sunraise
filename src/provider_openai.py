@@ -3,6 +3,7 @@ import json
 from llm import LLMProvider
 from tools.weather import get_weather
 from tools.current_time import get_current_time
+from tools.read_skill import read_skill
 
 from config import TOOL_SWITCH
 from config import BLUE, RESET
@@ -24,7 +25,7 @@ class OpenAIProvider(LLMProvider):
 
         # initial response
         response = self.client.responses.create(
-            model=self.model, input=conversation, tools=tools
+            model=self.model, instructions=self.config, input=conversation, tools=tools
         )
 
         # tool_calls built from item
@@ -39,6 +40,7 @@ class OpenAIProvider(LLMProvider):
             tool_switch = {
                 "get_weather": get_weather,
                 "get_current_time": get_current_time,
+                "read_skill": read_skill,
             }
 
             for tool_call in tool_calls:
@@ -60,7 +62,10 @@ class OpenAIProvider(LLMProvider):
 
             # final response
             response_with_tool = self.client.responses.create(
-                model=self.model, input=conversation + input_with_tools, tools=tools
+                model=self.model,
+                instructions=self.config,
+                input=conversation + input_with_tools,
+                tools=tools,
             )
 
             return response_with_tool.output_text
@@ -88,7 +93,10 @@ class OpenAIProvider(LLMProvider):
 
             # Initial response
             response = self.client.responses.create(
-                model=self.model, input=conversation, tools=tools
+                model=self.model,
+                instructions=self.config,
+                input=conversation,
+                tools=tools,
             )
 
             # Defining model turn

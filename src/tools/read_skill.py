@@ -44,6 +44,18 @@ google_read_skill_tool = {
     },
 }
 
+# read_skill tool config definition for openai
+openai_read_skill_tool = {
+    "type": "function",
+    "name": "read_skill",
+    "description": "Read a skill body",
+    "parameters": {
+        "type": "object",
+        "properties": {"skill_name": {"type": "string"}},
+        "required": ["skill_name"],
+    },
+}
+
 # read_skill tool config definition for mistral
 mistral_read_skill_tool = {
     "type": "function",

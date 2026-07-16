@@ -137,6 +137,30 @@ GOOGLE_REACT_SYSTEM_INSTRUCTION = """
 
 
 # ---------------------------------------------------------------------------
+# OPENAI SYSTEM PROMPT
+# ---------------------------------------------------------------------------
+
+OPENAI_SYSTEM_INSTRUCTION = """
+    # System Instructions
+    You are a helpful assistant named OpenAI Sunraise.
+    When weather is requested, you MUST use the get_weather tool.
+    When current time is requested, you MUST use get_current_time tool.
+    """.strip()
+
+OPENAI_REACT_SYSTEM_INSTRUCTION = """
+    # System Instructions
+    You are a helpful ReAct-style assistant named OPENAI Sunraise.
+
+    Reason step by step. When you need external information, call a tool instead of
+    guessing. After you receive a tool result, decide whether you need another tool
+    call or whether you can give the final answer.
+
+    When weather is requested, you MUST use the get_weather tool.
+    When the current time is requested, you MUST use the get_current_time tool.
+    """.strip()
+
+
+# ---------------------------------------------------------------------------
 # MISTRAL SYSTEM PROMPT
 # ---------------------------------------------------------------------------
 
@@ -235,6 +259,15 @@ def build_google_react_config(system_instruction, tools, skills):
         react_google_config = None
 
     return react_google_config
+
+
+def build_openai_system_prompt(system_instruction, skills):
+
+    skills_catalog = render_skills_catalog(skills)
+
+    system_prompt = system_instruction + "\n\n" + skills_catalog
+
+    return system_prompt
 
 
 def build_mistral_system_prompt(system_instruction, skills):

@@ -21,6 +21,7 @@ from tools.current_time import openai_current_time_tool
 from tools.current_time import anthropic_current_time_tool
 from tools.read_skill import anthropic_read_skill_tool
 from tools.read_skill import google_read_skill_tool
+from tools.read_skill import openai_read_skill_tool
 from tools.read_skill import mistral_read_skill_tool
 
 
@@ -28,9 +29,11 @@ from config import get_sunraise_version, get_provider_config_map
 from config import build_google_config, build_google_react_config
 from config import ANTHROPIC_SYSTEM_INSTRUCTION, ANTHROPIC_REACT_SYSTEM_INSTRUCTION
 from config import GOOGLE_SYSTEM_INSTRUCTION, GOOGLE_REACT_SYSTEM_INSTRUCTION
+from config import OPENAI_SYSTEM_INSTRUCTION, OPENAI_REACT_SYSTEM_INSTRUCTION
 from config import MISTRAL_SYSTEM_INSTRUCTION, MISTRAL_REACT_SYSTEM_INSTRUCTION
 from config import build_mistral_system_prompt
 from config import build_anthropic_system_prompt
+from config import build_openai_system_prompt
 
 from skills_loader import get_skills
 from skills_loader import SKILLS_DIR
@@ -229,8 +232,22 @@ if __name__ == "__main__":
         # ---------------------------------------------------------------------------
         elif provider == "openai":
 
-            tools = [openai_weather_tool, openai_current_time_tool]
-            openai_config = None
+            tools = [
+                openai_weather_tool,
+                openai_current_time_tool,
+                openai_read_skill_tool,
+            ]
+
+            skills = get_skills(SKILLS_DIR)
+
+            if react is not None:
+                openai_config = build_openai_system_prompt(
+                    OPENAI_REACT_SYSTEM_INSTRUCTION, skills
+                )
+            else:
+                openai_config = build_openai_system_prompt(
+                    OPENAI_SYSTEM_INSTRUCTION, skills
+                )
 
             openai_llm = OpenAIProvider(
                 provider_cfg["name"],
