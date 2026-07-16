@@ -18,7 +18,7 @@ google_current_time_tool = {
 }
 
 
-# get_current_time config definition for gemma4
+# get_current_time config definition for openllm
 openllm_current_time_tool = {
     "type": "function",
     "function": {
