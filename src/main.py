@@ -26,11 +26,7 @@ from tools.read_skill import openllm_read_skill_tool
 from tools.read_skill import mistral_read_skill_tool
 
 
-from config import ANTHROPIC_SYSTEM_INSTRUCTION, ANTHROPIC_REACT_SYSTEM_INSTRUCTION
-from config import GOOGLE_SYSTEM_INSTRUCTION, GOOGLE_REACT_SYSTEM_INSTRUCTION
-from config import OPENAI_SYSTEM_INSTRUCTION, OPENAI_REACT_SYSTEM_INSTRUCTION
-from config import OPENLLM_SYSTEM_INSTRUCTION, OPENLLM_REACT_SYSTEM_INSTRUCTION
-from config import MISTRAL_SYSTEM_INSTRUCTION, MISTRAL_REACT_SYSTEM_INSTRUCTION
+from config import SYSTEM_INSTRUCTION, REACT_SYSTEM_INSTRUCTION
 from config import get_sunraise_version, get_provider_config_map
 from config import build_anthropic_system_prompt
 from config import build_google_config, build_google_react_config
@@ -115,11 +111,11 @@ if __name__ == "__main__":
 
             if react is not None:
                 anthropic_config = build_anthropic_system_prompt(
-                    ANTHROPIC_REACT_SYSTEM_INSTRUCTION, skills
+                    REACT_SYSTEM_INSTRUCTION, skills
                 )
             else:
                 anthropic_config = build_anthropic_system_prompt(
-                    ANTHROPIC_SYSTEM_INSTRUCTION, skills
+                    SYSTEM_INSTRUCTION, skills
                 )
 
             anthropic_llm = AnthropicProvider(
@@ -161,12 +157,10 @@ if __name__ == "__main__":
 
             if react is not None:
                 google_config = build_google_react_config(
-                    GOOGLE_REACT_SYSTEM_INSTRUCTION, tools, skills
+                    REACT_SYSTEM_INSTRUCTION, tools, skills
                 )
             else:
-                google_config = build_google_config(
-                    GOOGLE_SYSTEM_INSTRUCTION, tools, skills
-                )
+                google_config = build_google_config(SYSTEM_INSTRUCTION, tools, skills)
 
             google_llm = GoogleProvider(
                 provider_cfg["name"],
@@ -190,9 +184,9 @@ if __name__ == "__main__":
             ]
 
             if react is not None:
-                openllm_config = OPENLLM_REACT_SYSTEM_INSTRUCTION
+                openllm_config = REACT_SYSTEM_INSTRUCTION
             else:
-                openllm_config = OPENLLM_SYSTEM_INSTRUCTION
+                openllm_config = SYSTEM_INSTRUCTION
 
             openllm_llm = OpenLLMProvider(
                 provider_cfg["name"],
@@ -217,9 +211,9 @@ if __name__ == "__main__":
             ]
 
             if react is not None:
-                mistral_config = MISTRAL_REACT_SYSTEM_INSTRUCTION
+                mistral_config = REACT_SYSTEM_INSTRUCTION
             else:
-                mistral_config = MISTRAL_SYSTEM_INSTRUCTION
+                mistral_config = SYSTEM_INSTRUCTION
 
             mistral_llm = MistralProvider(
                 provider_cfg["name"],
@@ -246,12 +240,10 @@ if __name__ == "__main__":
 
             if react is not None:
                 openai_config = build_openai_system_prompt(
-                    OPENAI_REACT_SYSTEM_INSTRUCTION, skills
+                    REACT_SYSTEM_INSTRUCTION, skills
                 )
             else:
-                openai_config = build_openai_system_prompt(
-                    OPENAI_SYSTEM_INSTRUCTION, skills
-                )
+                openai_config = build_openai_system_prompt(SYSTEM_INSTRUCTION, skills)
 
             openai_llm = OpenAIProvider(
                 provider_cfg["name"],
