@@ -6,7 +6,7 @@ A modular Python CLI for multi-turn conversations with LLM agents.
 
 - Runs an interactive chat loop from the terminal
 - LLM Support -  **Anthropic**, **Google**, **OpenAI**, **Mistral**, and a **dummy** provider for local testing without API keys.
-- Tool calling — built-in `get_weather` and `get_current_time` tools for all providers but dummy.
+- Tool calling — built-in `get_weather`,`get_current_time`, `read_skill` tools for all providers but dummy.
 - ReAct loop — optional multi-step reason-act-observe loop (`--react`) for **Anthropic**, **Google**, **OpenAI**, and **Mistral**. The agent iteratively calls tools and feeds observations back until it produces a final answer or hits the step budget
 
 ## Project structure
@@ -27,9 +27,14 @@ sunraise/
 │   ├── provider_openllm.py     # Provider implementations for Google LLM
 │   ├── main.py                 # CLI entry point (multi-turn chat)
 │   ├── user.py                 # User identity model
+│   ├── skill_loader.py         # Skill management helper functions
+│   └── skills/  
+│   │   ├── basic-skill/        # basic-skill to help create a skill
+│   │       └── SKILL.md
 │   └── tools/  
 │       ├── weather.py          # get_weather tool + per-provider schemas
 │       └── current_time.py     # get_current_time tool + per-provider schemas
+│       └── read_skill.py       # read_skill tool + per-provider schemas
 └── requirements.txt
 ```
 
@@ -134,6 +139,7 @@ Sunraise ships with two built-in tools, implemented in `src/tools/`:
 
 - `get_weather(city)` — returns the weather for a city
 - `get_current_time(timezone)` — returns the current date and time for a timezone
+- `read_skill(skill_name)` — returns skill as a dictionnary
 
 Each provider expects its tools in a different shape, so every tool defines a per-provider schema:
 
@@ -142,8 +148,12 @@ Each provider expects its tools in a different shape, so every tool defines a pe
 - **OpenAI** uses `item` definition
 - **Mistral** uses `item` definition
 
-At runtime, each provider in `src/llm.py` resolves a tool call.
 The **dummy** provider has no tools.
+
+### Skills
+The skills_loader.py utility allows to load skills stored within /skills folder.
+Skills are automatically discovered and loaded as a catalog passed to agent system instruction.
+Skills have to follow a YAML frontmatter + body definition like /basic-skill/SKILL.md example.
 
 ### ReAct loop
 
@@ -169,6 +179,8 @@ flowchart LR
     User["User (CLI)"] --> Main["main.py"]
     Main --> Agent["Agent"]
     Agent --> LLM["LLMProvider"]
+    Agent --> Tools
+    Agent --> Skills
     Agent --> ReAct
     ReAct --> Agent
     LLM --> Anthropic
@@ -178,7 +190,6 @@ flowchart LR
     LLM --> Mistral
     LLM --> Dummy
 ```
-
 
 
 - `**LLMProvider**` — abstract base class; each provider implements `__call__` with provider-specific message formatting

@@ -9,7 +9,7 @@ from skills_loader import render_skills_catalog
 
 load_dotenv()
 
-SUNRAISE_VERSION = "v0.1.3"
+SUNRAISE_VERSION = "v0.1.4"
 
 LLM_MODEL_GEMINI = os.getenv("LLM_MODEL_GEMINI")
 API_KEY_GEMINI = os.getenv("API_KEY_GEMINI")
