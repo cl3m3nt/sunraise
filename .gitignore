@@ -45,6 +45,7 @@ env/
 # Credentials and secrets
 *.key
 *.pem
+token.json
 credentials.json
 service-account-key.json
 

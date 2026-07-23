@@ -2,8 +2,6 @@ import os
 import yaml
 from dataclasses import dataclass
 
-# from config import GREEN,RED, RESET
-
 SKILLS_DIR = os.path.dirname(os.path.abspath(__file__)) + "/skills"
 
 BLUE = "\033[38;5;117m"
@@ -23,8 +21,6 @@ class Skill:
 
 def get_skills(skill_dir: str):
     """Get skills within a given skill directory"""
-
-    print(f"--- {GREEN} From get_skills {RESET} ---")
 
     skills = []
 
@@ -91,19 +87,3 @@ def render_skills_catalog(skills: list):
     for skill in sorted(skills, key=lambda s: s.name):
         lines.append(f"- {skill.name}: {skill.description}")
     return "\n".join(lines)
-
-
-if __name__ == "__main__":
-
-    s = Skill("my-skill", "this is my first skill", "skill body", "skill path")
-
-    skill_dir = os.path.expanduser("~/Desktop/sunraise/src/skills")
-    skills = get_skills(skill_dir)
-
-    for skill in skills:
-        print(skill)
-
-    skill_catalog = render_skills_catalog(skills)
-    print(f"{GREEN}--- skill catalog  ---{RESET}")
-    print(skill_catalog)
-    print(f"{GREEN}--- skill catalog end  ---{RESET}")
