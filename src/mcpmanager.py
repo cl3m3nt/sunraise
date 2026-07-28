@@ -12,7 +12,7 @@ class MCPManager:
         self.mcpclient = mcpclient
         self.loop = None
         self.thread = None
-        # self.run_handle = None
+        self.run_handle = None
 
     def _run_loop(self):
         """Helper function to make sure event loop run in background thread of MCP client process"""
@@ -64,11 +64,10 @@ class MCPManager:
         """Stop the MCP session by updating shutdown_event state"""
         # Signal run() to exit its wait, then close the MCP session
         self.loop.call_soon_threadsafe(self.mcpclient.shutdown_event.set)
-        # This is from where shutdown_event is set
-        # This is from where we stop the session from running
 
-        # Wait for run() to finish (includes close())
-        # self.run_handle.result()
+        # Wait for run() to finish (includes close()) before stopping the loop,
+        # otherwise the stdio session/subprocess can be left unclosed.
+        self.run_handle.result()
 
         # Stop the event loop and join the background thread
         self.loop.call_soon_threadsafe(self.loop.stop)
