@@ -288,6 +288,7 @@ if __name__ == "__main__":
             # ---------------------------------------------------------------------------
 
             user_prompt = input("[user]:")
+            print(f"User prompt: {user_prompt}")
             if provider == "anthropic":
                 user_message = {"role": "user", "content": user_prompt}
             elif provider == "dummy":
