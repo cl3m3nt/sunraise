@@ -289,6 +289,10 @@ if __name__ == "__main__":
 
             user_prompt = input("[user]:")
             if provider == "anthropic":
+                user_prompt = user_prompt.strip()
+                if user_prompt == "":
+                    print("Empty prompt. Please enter a valid prompt.")
+                    continue
                 user_message = {"role": "user", "content": user_prompt}
             elif provider == "dummy":
                 user_message = user_prompt
