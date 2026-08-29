@@ -74,12 +74,15 @@ def serialize_anthropic_conversation(conversation):
     out = []
     for c in conversation:
         new_blocks = []
-        for block in c["content"]:
-            if type(block) in [TextBlock, ToolUseBlock]:
-                block = block.to_json()
-                new_blocks.append(block)
-            else:
-                new_blocks.append(block)
+        if isinstance(c["content"], str):
+            new_blocks.append(c["content"])
+        else:
+            for block in c["content"]:
+                if type(block) in [TextBlock, ToolUseBlock]:
+                    block = block.to_json()
+                    new_blocks.append(block)
+                else:
+                    new_blocks.append(block)
         if new_blocks != c["content"]:
             c = {**c, "content": new_blocks}
         out.append(c)
