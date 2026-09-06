@@ -287,7 +287,9 @@ if __name__ == "__main__":
             # USER PROMPT MANAGEMENT
             # ---------------------------------------------------------------------------
 
-            user_prompt = input("[user]:")
+            user_prompt = input("[user]:").strip()
+            if user_prompt == "":
+                continue
             if provider == "anthropic":
                 user_message = {"role": "user", "content": user_prompt}
             elif provider == "dummy":
