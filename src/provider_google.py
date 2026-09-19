@@ -14,7 +14,7 @@ class GoogleProvider(LLMProvider):
         self.config = config
         self.args = args
 
-    def __call__(self, conversation,mcp_client) -> str:
+    def __call__(self, conversation, mcp_client) -> str:
 
         # self.args unused as tools are defined by config
 
@@ -48,13 +48,29 @@ class GoogleProvider(LLMProvider):
                     tool_function = TOOL_SWITCH[tool_call_function.name]
                     print(f"{BLUE}tool_function:{tool_function}{RESET}")
 
-                    if tool_call_function.name != "greetings":
+                    if (
+                        tool_call_function.name != "greetings"
+                        and tool_call_function.name != "farewell"
+                    ):
                         result = tool_function(**tool_call_function.args)
                         print(f"{BLUE} tools result:{result}{RESET}")
-                    elif tool_call_function.name == "greetings":
-                        result = tool_function("greetings", tool_call_function.args,mcp_client)
-                        print(f"{BLUE} greeting result:{result}{RESET}")
 
+                    elif (
+                        tool_call_function.name == "greetings"
+                        or tool_call_function.name == "farewell"
+                    ):
+                        print(
+                            f"{BLUE} from greeting/farewell tool condition {tool_call_function.name}{RESET}"
+                        )
+                        print(
+                            f"{BLUE} voici l'argument de la function greetings/farewell: {tool_call_function.args} {RESET}"
+                        )
+                        if tool_call_function.name == "greetings":
+                            result = tool_function("greetings", tool_call_function.args)
+                        elif tool_call_function.name == "farewell":
+                            result = tool_function("farewell", tool_call_function.args)
+
+                        print(f"{BLUE} greeting/farewell result:{result}{RESET}")
 
                 # all tool_result concatenated as prepared_tool_result
                 tool_results.append(
@@ -64,7 +80,6 @@ class GoogleProvider(LLMProvider):
                     )
                 )
                 print(f"{BLUE} tool results:{tool_results}{RESET}")
-
 
             # final response
             response_with_tool = self.client.models.generate_content(

@@ -165,22 +165,25 @@ if __name__ == "__main__":
             mcp_client = MCPClient()
             mcp_manager = MCPManager("mcp manager", mcp_client)
             mcp_server_path = "./mcptools/greetings/server.py"
-            
+
             result = mcp_manager.start(mcp_server_path)
-            print(result)
-        
+
             # Executing get_tools fom MCPManager
-            print("--- getting MCP tool ---")
             tool_result = mcp_manager.get_tools()
             for t in tool_result:
-                #print(t)
-                #print(prepare_mcp_google(t))
-                mcp_tool = prepare_mcp_google(t) # prepare mcp tools to google expected tool format
+                # print(t)
+                # print(prepare_mcp_google(t))
+                mcp_tool = prepare_mcp_google(
+                    t
+                )  # prepare mcp tools to google expected tool format
                 tools.append(mcp_tool)
 
-            
-            #print("--- checking tools from init tool def + mcp tool ---")
-            #print(tools)
+            # print("--- checking tools from init tool def + mcp tool ---")
+            # print(tools)
+
+            # ------------------------------------
+            # GOOGLE MCP SUBSECTION
+            # ------------------------------------
 
             if react is not None:
                 google_config = build_google_react_config(
@@ -384,7 +387,7 @@ if __name__ == "__main__":
                             f"{YELLOW}---- conversation step {conversation_index} ---{RESET}"
                         )
                         if not react:
-                            agent_response = a(conversation,mcp_client)
+                            agent_response = a(conversation, mcp_client)
 
                         elif react:
                             agent_response = a.react_call(conversation, react)

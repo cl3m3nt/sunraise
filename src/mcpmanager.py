@@ -2,7 +2,6 @@ import asyncio
 from mcpclient import MCPClient
 from threading import Thread
 from typing import Any, Optional
-import argparse
 
 
 class MCPManager:
@@ -26,6 +25,7 @@ class MCPManager:
         self.loop = asyncio.new_event_loop()
 
         # defining coroutine from async connect_to_server function to be run within event loop
+        print("From MCP manager: launching MCP session from MCP client:")
         run_coroutine = self.mcpclient.run(server_script_path)
 
         # Create the background thread
@@ -48,6 +48,7 @@ class MCPManager:
 
     def get_tools(self):
         """Overloading the async mcp client get_tool() method"""
+        print("From MCP manager: getting MCP tools")
         get_tools_coroutine = self.mcpclient.get_tools()
         #  Running the coroutine within the background thread of event loop
         future = asyncio.run_coroutine_threadsafe(get_tools_coroutine, self.loop)
@@ -76,6 +77,7 @@ class MCPManager:
         print("--- Cleanly stopped everything ---")
 
 
+"""
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Agent app")
@@ -167,3 +169,5 @@ if __name__ == "__main__":
     # STOP MCP SESSION
     # ---------------------------------------------------------------------------
     mManager.stop()
+
+"""
