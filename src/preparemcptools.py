@@ -1,5 +1,5 @@
-def prepare_mcp_google(mcp_tool_def:dict):
-    """ Prepare tool definition from MCP server for google """
+def prepare_mcp_google(mcp_tool_def: dict):
+    """Prepare tool definition from MCP server for google"""
     mcp_google_tool = {
         "name": mcp_tool_def["name"],
         "description": mcp_tool_def["description"],
@@ -10,4 +10,3 @@ def prepare_mcp_google(mcp_tool_def:dict):
         },
     }
     return mcp_google_tool
-
