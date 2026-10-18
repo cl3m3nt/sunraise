@@ -10,7 +10,7 @@ class LLMProvider(ABC):
         self.temperature = temperature
 
     @abstractmethod
-    def __call__(self, message):
+    def __call__(self, message,mcpclient):
         pass
 
     @abstractmethod

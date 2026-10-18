@@ -14,9 +14,11 @@ class GoogleProvider(LLMProvider):
         self.config = config
         self.args = args
 
-    def __call__(self, conversation) -> str:
+    def __call__(self, conversation,mcp_client) -> str:
 
         # self.args unused as tools are defined by config
+
+        print(f"{BLUE}debugging mcp tools{RESET}")
 
         # initial response
         response = self.client.models.generate_content(
@@ -44,7 +46,15 @@ class GoogleProvider(LLMProvider):
                         "TOOL CALL:", tool_call_function.name, tool_call_function.args
                     )
                     tool_function = TOOL_SWITCH[tool_call_function.name]
-                    result = tool_function(**tool_call_function.args)
+                    print(f"{BLUE}tool_function:{tool_function}{RESET}")
+
+                    if tool_call_function.name != "greetings":
+                        result = tool_function(**tool_call_function.args)
+                        print(f"{BLUE} tools result:{result}{RESET}")
+                    elif tool_call_function.name == "greetings":
+                        result = tool_function("greetings", tool_call_function.args,mcp_client)
+                        print(f"{BLUE} greeting result:{result}{RESET}")
+
 
                 # all tool_result concatenated as prepared_tool_result
                 tool_results.append(
@@ -53,6 +63,8 @@ class GoogleProvider(LLMProvider):
                         response={"result": result},
                     )
                 )
+                print(f"{BLUE} tool results:{tool_results}{RESET}")
+
 
             # final response
             response_with_tool = self.client.models.generate_content(

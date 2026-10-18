@@ -111,9 +111,9 @@ class MCPClient:
 
         elif tool_name == "greetings":
             print(f"--- Greetings  {arguments} ---")
-            await asyncio.sleep(5)
+            #await asyncio.sleep(5)
             print("--- Finalizing greetings workflow ---")
-            await asyncio.sleep(3)
+            #await asyncio.sleep(3)
 
             get_waiting()
 

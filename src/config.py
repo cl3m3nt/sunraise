@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 from tools.weather import get_weather
 from tools.current_time import get_current_time
 from tools.read_skill import read_skill
+from tools.greetings import get_greetings
 from skills_loader import render_skills_catalog
 
 
@@ -32,6 +33,7 @@ TOOL_SWITCH = {
     "get_weather": get_weather,
     "get_current_time": get_current_time,
     "read_skill": read_skill,
+    "greetings": get_greetings,
 }
 
 BLUE = "\033[38;5;117m"

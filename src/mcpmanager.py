@@ -106,9 +106,15 @@ if __name__ == "__main__":
     elif mcpserver == "calendar":
         mcp_server_path = "./mcptools/calendar/server.py"
 
+    # ---------------------------------------------------------------------------
+    # START MCP SESSION
+    # ---------------------------------------------------------------------------
     result = mManager.start(mcp_server_path)
     print(result)
 
+    # ---------------------------------------------------------------------------
+    # GET MCP SERVER TOOLS
+    # ---------------------------------------------------------------------------
     # Executing get_tools fom MCPManager
     tool_result = mManager.get_tools()
     print(tool_result)
@@ -156,4 +162,8 @@ if __name__ == "__main__":
         calendar_tool_result = mManager.execute_tool(calendar_tool_name, None)
         print(calendar_tool_result)
 
+
+    # ---------------------------------------------------------------------------
+    # STOP MCP SESSION
+    # ---------------------------------------------------------------------------
     mManager.stop()

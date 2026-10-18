@@ -1,6 +1,6 @@
+import asyncio
 import os
 import sys
-import asyncio
 from contextlib import AsyncExitStack
 from typing import Any, Optional
 
@@ -31,8 +31,16 @@ class MCPClient:
             ClientSession(stdio, write)
         )
         await self.session.initialize()
+       
+        msg = "\nConnected to server"
+        print(msg)
+        return msg
 
+    async def get_tools(self, server_script_path: str):
+
+        # Send the MCP msg 'list_tools()' over the MCP session and wait server response
         response = await self.session.list_tools()
+
         self.tools = [
             {
                 "name": tool.name,
@@ -43,16 +51,14 @@ class MCPClient:
         ]
         print("\nConnected to server with tools:", [t["name"] for t in self.tools])
 
-    async def execute_tool(
-        self, tool_name: str, arguments: Optional[dict[str, Any]] = None
-    ) -> str:
-        if self.session is None:
-            raise RuntimeError(
-                "Client is not connected. Call connect_to_server() first."
-            )
+        return self.tools
 
-        result = await self.session.call_tool(tool_name, arguments or {})
-        return self._result_to_text(result)
+    async def execute_tool(self, tool_name: str,server_script_path:str, arguments: Optional[dict[str, Any]] = None) -> str:
+       
+        response = await self.session.call_tool(tool_name, arguments or {})
+        print(f"\nExecuted tool {tool_name} result:", response.structuredContent)
+        
+        return self._result_to_text(response)
 
     async def close(self) -> None:
         await self.exit_stack.aclose()
@@ -68,17 +74,32 @@ class MCPClient:
         return "\n".join(parts) if parts else str(result)
 
 
+async def main():
+
+    client = MCPClient()
+
+    server_path = "/Users/clement/Desktop/sunraise/src/mcptools/arithm/server.py"
+
+    try:
+        print("--- connect ---")
+        await client.connect_to_server(server_path)
+
+        print("--- tools ---")
+        tools = await client.get_tools(server_path)
+        print(tools)
+
+        print("--- execute ---")
+        result = await client.execute_tool(
+            "add",
+            server_path,
+            {"a": 1, "b": 2}
+        )
+        print(result)
+
+    finally:
+        print("--- closing ---")
+        await client.close()
+
+
 if __name__ == "__main__":
-
-    async def main() -> None:
-        print("--- creating mcp client ---")
-        m = MCPClient()
-        try:
-            await m.connect_to_server("./server.py")
-            tool_result = await m.execute_tool("get_calendar_events")
-            print("\nTool result:\n", tool_result)
-
-        finally:
-            await m.close()
-
-    asyncio.run(main())
+    asyncio.run(main()) # this expect the self.exit_stack.aclose() to finish properly the event loop

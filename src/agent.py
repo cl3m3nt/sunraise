@@ -13,8 +13,8 @@ class Agent:
         identity = uuid.uuid4()
         return identity
 
-    def __call__(self, message):
-        return self.LLMProvider(message)
+    def __call__(self, message,mcp_client):
+        return self.LLMProvider(message,mcp_client)
 
     def extract_text(self, model_turn):
         return self.LLMProvider.extract_text(model_turn)

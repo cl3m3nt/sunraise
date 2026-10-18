@@ -37,6 +37,10 @@ from config import build_mistral_system_prompt
 from skills_loader import get_skills
 from skills_loader import SKILLS_DIR
 
+from mcpclient import MCPClient
+from mcpmanager import MCPManager
+from preparemcptools import prepare_mcp_google
+
 
 from conversation import (
     save_conversation,
@@ -154,6 +158,29 @@ if __name__ == "__main__":
             ]
 
             skills = get_skills(SKILLS_DIR)
+
+            # ------------------------------------
+            # GOOGLE MCP SUBSECTION
+            # ------------------------------------
+            mcp_client = MCPClient()
+            mcp_manager = MCPManager("mcp manager", mcp_client)
+            mcp_server_path = "./mcptools/greetings/server.py"
+            
+            result = mcp_manager.start(mcp_server_path)
+            print(result)
+        
+            # Executing get_tools fom MCPManager
+            print("--- getting MCP tool ---")
+            tool_result = mcp_manager.get_tools()
+            for t in tool_result:
+                #print(t)
+                #print(prepare_mcp_google(t))
+                mcp_tool = prepare_mcp_google(t) # prepare mcp tools to google expected tool format
+                tools.append(mcp_tool)
+
+            
+            #print("--- checking tools from init tool def + mcp tool ---")
+            #print(tools)
 
             if react is not None:
                 google_config = build_google_react_config(
@@ -357,7 +384,7 @@ if __name__ == "__main__":
                             f"{YELLOW}---- conversation step {conversation_index} ---{RESET}"
                         )
                         if not react:
-                            agent_response = a(conversation)
+                            agent_response = a(conversation,mcp_client)
 
                         elif react:
                             agent_response = a.react_call(conversation, react)
