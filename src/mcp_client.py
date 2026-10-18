@@ -35,7 +35,7 @@ class MCPClient:
         )
         await self.session.initialize()
 
-        msg = "\n--- Connected to MCP server ---"
+        msg = f"   From MCP client: Connected to MCP server {server_script_path}"
         print(msg)
         return msg
 
@@ -45,7 +45,7 @@ class MCPClient:
 
         await self.connect_to_server(server_script_path)
         self.started_event.set()
-        print("--- MCP session running ---")
+        print("   From MCP client: Running MCP session.")
 
         """
         while (self.shutdown_event.is_set() is not True):
@@ -64,6 +64,7 @@ class MCPClient:
     async def get_tools(self):
 
         # Send the MCP primitive msg 'list_tools()' over the MCP session and wait server response
+        print("   From MCP client: getting MCP tools")
         response = await self.session.list_tools()
 
         self.tools = [
@@ -75,7 +76,7 @@ class MCPClient:
             for tool in response.tools
         ]
         print(
-            f"\n--- Connected to MCP server with tools: {[t["name"] for t in self.tools]} ---"
+            f"    From MCP client: MCP server tools list: {[t["name"] for t in self.tools]} ---"
         )
 
         return self.tools
@@ -96,34 +97,34 @@ class MCPClient:
 
         elif tool_name == "add":
             print(f"--- Adding  {arguments} ---")
-            await asyncio.sleep(5)
-            print("--- Finalizing addition workflow ---")
-            await asyncio.sleep(3)
-            get_waiting()
+            # await asyncio.sleep(5)
+            # print("--- Finalizing addition workflow ---")
+            # await asyncio.sleep(3)
+            # get_waiting()
 
         elif tool_name == "multiply":
             print(f"--- Multiplying  {arguments} ---")
-            await asyncio.sleep(5)
-            print("--- Finalizing multiplication workflow ---")
-            await asyncio.sleep(3)
+            # await asyncio.sleep(5)
+            # print("--- Finalizing multiplication workflow ---")
+            # await asyncio.sleep(3)
 
-            get_waiting()
+            # get_waiting()
 
         elif tool_name == "greetings":
             print(f"--- Greetings  {arguments} ---")
-            await asyncio.sleep(5)
-            print("--- Finalizing greetings workflow ---")
-            await asyncio.sleep(3)
+            # await asyncio.sleep(5)
+            # print("--- Finalizing greetings workflow ---")
+            # await asyncio.sleep(3)
 
-            get_waiting()
+            # get_waiting()
 
         elif tool_name == "farewell":
             print(f"--- Farewell  {arguments} ---")
-            await asyncio.sleep(5)
-            print("--- Finalizing farewell workflow ---")
-            await asyncio.sleep(3)
+            # await asyncio.sleep(5)
+            # print("--- Finalizing farewell workflow ---")
+            # await asyncio.sleep(3)
 
-            get_waiting()
+            # get_waiting()
 
         # Send the MCP primitive msg 'call_tool()' over the MCP session and wait server response
         response = await self.session.call_tool(tool_name, arguments or {})

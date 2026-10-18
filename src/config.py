@@ -1,11 +1,15 @@
-from google.genai import types
 import os
+
+from google.genai import types
 from dotenv import load_dotenv
+
+# loading local tools
 from tools.weather import get_weather
 from tools.current_time import get_current_time
+
+# loading local skills
 from tools.read_skill import read_skill
 from skills_loader import render_skills_catalog
-
 
 load_dotenv()
 

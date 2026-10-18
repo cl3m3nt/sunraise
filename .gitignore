@@ -63,3 +63,11 @@ logs/
 
 # Conversation files
 conversation/
+
+# Local scratch kept on disk, not in the repo
+/dev/
+/prompt/
+/src/dev/
+/src/notebook/
+/src/prompt/
+/test/

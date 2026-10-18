@@ -37,6 +37,10 @@ from config import build_mistral_system_prompt
 from skills_loader import get_skills
 from skills_loader import SKILLS_DIR
 
+from mcp_client import MCPClient
+from mcp_manager import MCPManager
+from preparemcptools import prepare_mcp_google
+
 
 from conversation import (
     save_conversation,
@@ -146,22 +150,91 @@ if __name__ == "__main__":
         # ---------------------------------------------------------------------------
         elif provider == "google":
 
-            # Tools, Skills, System instructions
+            # ------------------------------------
+            # TOOLS SUBSECTION
+            # ------------------------------------
             tools = [
                 google_weather_tool,
                 google_current_time_tool,
                 google_read_skill_tool,
             ]
 
+            # ------------------------------------
+            # SKILLS SUBSECTION
+            # ------------------------------------
             skills = get_skills(SKILLS_DIR)
+
+            # ------------------------------------
+            # MCP SUBSECTION
+            # ------------------------------------
+            # creating mcp client
+            mcp_client = MCPClient()
+            # creating mcp manager that takes clients input
+            mcp_manager = MCPManager("greetings", mcp_client)
+            # defining the mcp server module path
+            mcp_server_path = "./mcptools/greetings/server.py"
+
+            # creating mcp client
+            mcp_client_2 = MCPClient()
+            # creating mcp manager that takes clients input
+            mcp_manager_2 = MCPManager("arithm", mcp_client_2)
+            # defining the mcp server module path
+            mcp_server_path_2 = "./mcptools/arithm/server.py"
+
+            print("--------------- Starting MCP Manager(s) ---------------")
+            # starting the MCP servers
+            result = mcp_manager.start(mcp_server_path)
+            result_2 = mcp_manager_2.start(mcp_server_path_2)
+
+            # Executing get_tools fom MCPManager
+            tool_result = mcp_manager.get_tools()
+            for t in tool_result:
+                # print(t["description"])
+                mcp_tool = prepare_mcp_google(t)
+                tools.append(mcp_tool)
+
+            # Executing get_tools fom MCPManager
+            tool_result_2 = mcp_manager_2.get_tools()
+            for t in tool_result_2:
+                # print(t["description"])
+                mcp_tool = prepare_mcp_google(t)
+                tools.append(mcp_tool)
+
+            print(
+                "--------------- Checking tools from init tool def + mcp tool ---------------"
+            )
+            for t in tools:
+                print(t["name"])
+
+            # ------------------------------------
+            # GOOGLE MCP SUBSECTION
+            # ------------------------------------
 
             if react is not None:
                 google_config = build_google_react_config(
                     REACT_SYSTEM_INSTRUCTION, tools, skills
                 )
             else:
-                google_config = build_google_config(SYSTEM_INSTRUCTION, tools, skills)
+                SYSTEM_INSTRUCTION_WITH_MCP = SYSTEM_INSTRUCTION
+                for t in tool_result:
+                    # print(t["description"])
+                    SYSTEM_INSTRUCTION_WITH_MCP = (
+                        SYSTEM_INSTRUCTION_WITH_MCP
+                        + "\n"
+                        + "You can "
+                        + t["description"]
+                        + " "
+                        + "with "
+                        + t["name"]
+                        + " tool."
+                    )
+                print("---------------System instruction with MCP ----------------")
+                print(SYSTEM_INSTRUCTION_WITH_MCP)
+                google_config = build_google_config(
+                    SYSTEM_INSTRUCTION_WITH_MCP, tools, skills
+                )
 
+            # Option 2: PASS MCP MANAGER during LLM Provider instantiation
             google_llm = GoogleProvider(
                 provider_cfg["name"],
                 provider_cfg["model"],
@@ -290,6 +363,7 @@ if __name__ == "__main__":
             user_prompt = input("[user]:").strip()
             if user_prompt == "":
                 continue
+
             if provider == "anthropic":
                 user_message = {"role": "user", "content": user_prompt}
             elif provider == "dummy":
@@ -357,7 +431,10 @@ if __name__ == "__main__":
                             f"{YELLOW}---- conversation step {conversation_index} ---{RESET}"
                         )
                         if not react:
-                            agent_response = a(conversation)
+                            # OPTION 1: ADDING MCP MANAGER here as an agent call ARG
+                            agent_response = a(
+                                conversation, [mcp_manager, mcp_manager_2]
+                            )
 
                         elif react:
                             agent_response = a.react_call(conversation, react)
