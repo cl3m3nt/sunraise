@@ -52,7 +52,7 @@ def parse_skill(skill_path: str):
     metadata = {}
 
     with open(skill_path, "r") as f:
-        #print(f"{GREEN}Reading skill file at {skill_path}{RESET}")
+        print(f"{GREEN}Reading skill file at {skill_path}{RESET}")
         lines = f.read().splitlines()
 
     if lines[0] == "---":  # skill metadata start

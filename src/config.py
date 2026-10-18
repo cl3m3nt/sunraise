@@ -1,13 +1,15 @@
-from google.genai import types
 import os
+
+from google.genai import types
 from dotenv import load_dotenv
+
+# loading local tools
 from tools.weather import get_weather
 from tools.current_time import get_current_time
-from tools.read_skill import read_skill
-from tools.greetings import get_greetings
-from tools.farewell import get_farewell
-from skills_loader import render_skills_catalog
 
+# loading local skills
+from tools.read_skill import read_skill
+from skills_loader import render_skills_catalog
 
 load_dotenv()
 
@@ -34,8 +36,6 @@ TOOL_SWITCH = {
     "get_weather": get_weather,
     "get_current_time": get_current_time,
     "read_skill": read_skill,
-    "greetings": get_greetings,
-    "farewell": get_farewell,
 }
 
 BLUE = "\033[38;5;117m"

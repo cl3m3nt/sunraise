@@ -14,11 +14,11 @@ class GoogleProvider(LLMProvider):
         self.config = config
         self.args = args
 
-    def __call__(self, conversation, mcp_client) -> str:
+    def __call__(self, conversation, mcp_manager) -> str:
 
         # self.args unused as tools are defined by config
 
-        print(f"{BLUE}debugging mcp tools{RESET}")
+        # print(f"{BLUE}debugging mcp tools{RESET}")
 
         # initial response
         response = self.client.models.generate_content(
@@ -45,32 +45,48 @@ class GoogleProvider(LLMProvider):
                     print(
                         "TOOL CALL:", tool_call_function.name, tool_call_function.args
                     )
-                    tool_function = TOOL_SWITCH[tool_call_function.name]
-                    print(f"{BLUE}tool_function:{tool_function}{RESET}")
 
-                    if (
-                        tool_call_function.name != "greetings"
-                        and tool_call_function.name != "farewell"
-                    ):
+                    if tool_call_function.name in TOOL_SWITCH:
+                        tool_function = TOOL_SWITCH[tool_call_function.name]
+                        print(f"{BLUE}tool_function:{tool_function}{RESET}")
                         result = tool_function(**tool_call_function.args)
                         print(f"{BLUE} tools result:{result}{RESET}")
 
                     elif (
                         tool_call_function.name == "greetings"
                         or tool_call_function.name == "farewell"
+                        and mcp_manager[0].name == "greetings"
                     ):
-                        print(
-                            f"{BLUE} from greeting/farewell tool condition {tool_call_function.name}{RESET}"
-                        )
-                        print(
-                            f"{BLUE} voici l'argument de la function greetings/farewell: {tool_call_function.args} {RESET}"
-                        )
+
+                        # ------------------------------------
+                        # INSTANTIATING TOOL_FUNCTION FROM MCP_MANAGER
+                        # ------------------------------------
+                        tool_function = mcp_manager[0].execute_tool
+
                         if tool_call_function.name == "greetings":
                             result = tool_function("greetings", tool_call_function.args)
                         elif tool_call_function.name == "farewell":
                             result = tool_function("farewell", tool_call_function.args)
 
                         print(f"{BLUE} greeting/farewell result:{result}{RESET}")
+
+                    elif (
+                        tool_call_function.name == "add"
+                        or tool_call_function.name == "multiply"
+                        and mcp_manager[1].name == "arithm"
+                    ):
+
+                        # ------------------------------------
+                        # INSTANTIATING TOOL_FUNCTION FROM MCP_MANAGER
+                        # ------------------------------------
+                        tool_function = mcp_manager[1].execute_tool
+
+                        if tool_call_function.name == "add":
+                            result = tool_function("add", tool_call_function.args)
+                        elif tool_call_function.name == "multiply":
+                            result = tool_function("multiply", tool_call_function.args)
+
+                        print(f"{BLUE} add/multiply result:{result}{RESET}")
 
                 # all tool_result concatenated as prepared_tool_result
                 tool_results.append(

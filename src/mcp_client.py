@@ -35,7 +35,7 @@ class MCPClient:
         )
         await self.session.initialize()
 
-        msg = "   From MCP client: Connected to MCP server."
+        msg = f"   From MCP client: Connected to MCP server {server_script_path}"
         print(msg)
         return msg
 
@@ -97,18 +97,18 @@ class MCPClient:
 
         elif tool_name == "add":
             print(f"--- Adding  {arguments} ---")
-            await asyncio.sleep(5)
-            print("--- Finalizing addition workflow ---")
-            await asyncio.sleep(3)
-            get_waiting()
+            # await asyncio.sleep(5)
+            # print("--- Finalizing addition workflow ---")
+            # await asyncio.sleep(3)
+            # get_waiting()
 
         elif tool_name == "multiply":
             print(f"--- Multiplying  {arguments} ---")
-            await asyncio.sleep(5)
-            print("--- Finalizing multiplication workflow ---")
-            await asyncio.sleep(3)
+            # await asyncio.sleep(5)
+            # print("--- Finalizing multiplication workflow ---")
+            # await asyncio.sleep(3)
 
-            get_waiting()
+            # get_waiting()
 
         elif tool_name == "greetings":
             print(f"--- Greetings  {arguments} ---")
