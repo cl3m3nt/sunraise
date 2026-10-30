@@ -39,7 +39,7 @@ from skills_loader import SKILLS_DIR
 
 from mcp_client import MCPClient
 from mcp_manager import MCPManager
-from preparemcptools import prepare_mcp_google
+from prepare_mcp_tools import prepare_mcp_google
 
 
 from conversation import (
@@ -168,34 +168,39 @@ if __name__ == "__main__":
             # MCP SUBSECTION
             # ------------------------------------
             # creating mcp client
-            mcp_client = MCPClient()
+            mcp_client_greetings = MCPClient()
             # creating mcp manager that takes clients input
-            mcp_manager = MCPManager("greetings", mcp_client)
+            mcp_manager_greetings = MCPManager("greetings", mcp_client_greetings)
             # defining the mcp server module path
-            mcp_server_path = "./mcptools/greetings/server.py"
+            mcp_server_path_greetings = "./mcp_servers/greetings/server.py"
 
             # creating mcp client
-            mcp_client_2 = MCPClient()
+            mcp_client_arithm = MCPClient()
             # creating mcp manager that takes clients input
-            mcp_manager_2 = MCPManager("arithm", mcp_client_2)
+            mcp_manager_arithm = MCPManager("arithm", mcp_client_arithm)
             # defining the mcp server module path
-            mcp_server_path_2 = "./mcptools/arithm/server.py"
+            mcp_server_path_arithm = "./mcp_servers/arithm/server.py"
 
             print("--------------- Starting MCP Manager(s) ---------------")
             # starting the MCP servers
-            result = mcp_manager.start(mcp_server_path)
-            result_2 = mcp_manager_2.start(mcp_server_path_2)
+            result_greetings = mcp_manager_greetings.start(mcp_server_path_greetings)
+            result_arithm = mcp_manager_arithm.start(mcp_server_path_arithm)
+
+            mcp_managers = {
+                mcp_manager_greetings.name: mcp_manager_greetings,
+                mcp_manager_arithm.name: mcp_manager_arithm,
+            }
 
             # Executing get_tools fom MCPManager
-            tool_result = mcp_manager.get_tools()
-            for t in tool_result:
+            tool_result_greetings = mcp_manager_greetings.get_tools()
+            for t in tool_result_greetings:
                 # print(t["description"])
                 mcp_tool = prepare_mcp_google(t)
                 tools.append(mcp_tool)
 
             # Executing get_tools fom MCPManager
-            tool_result_2 = mcp_manager_2.get_tools()
-            for t in tool_result_2:
+            tool_result_arithm = mcp_manager_arithm.get_tools()
+            for t in tool_result_arithm:
                 # print(t["description"])
                 mcp_tool = prepare_mcp_google(t)
                 tools.append(mcp_tool)
@@ -216,7 +221,19 @@ if __name__ == "__main__":
                 )
             else:
                 SYSTEM_INSTRUCTION_WITH_MCP = SYSTEM_INSTRUCTION
-                for t in tool_result:
+                for t in tool_result_greetings:
+                    # print(t["description"])
+                    SYSTEM_INSTRUCTION_WITH_MCP = (
+                        SYSTEM_INSTRUCTION_WITH_MCP
+                        + "\n"
+                        + "You can "
+                        + t["description"]
+                        + " "
+                        + "with "
+                        + t["name"]
+                        + " tool."
+                    )
+                for t in tool_result_arithm:
                     # print(t["description"])
                     SYSTEM_INSTRUCTION_WITH_MCP = (
                         SYSTEM_INSTRUCTION_WITH_MCP
@@ -417,8 +434,23 @@ if __name__ == "__main__":
 
                 print("Bye!")
 
+            # MCP server information
+            elif user_prompt == "/mcp":
+                if provider == "google":
+                    print(f"MCP servers: {', '.join(mcp_managers)}")
+                    for mcp_manager in mcp_managers.values():
+                        print(
+                            f"MCP server: {mcp_manager.name}, "
+                            f"status: {mcp_manager.mcpclient.server_status}"
+                        )
+                        for t in mcp_manager.mcpclient.tools:
+                            print(f"tool:{t["name"]}, {t["description"]}")
+                else:
+                    print("No MCP server available")
+
             # conversation loop
             else:
+
                 try:
 
                     # ---------------------------------------------------------------------------
@@ -432,9 +464,7 @@ if __name__ == "__main__":
                         )
                         if not react:
                             # OPTION 1: ADDING MCP MANAGER here as an agent call ARG
-                            agent_response = a(
-                                conversation, [mcp_manager, mcp_manager_2]
-                            )
+                            agent_response = a(conversation, mcp_managers)
 
                         elif react:
                             agent_response = a.react_call(conversation, react)
@@ -593,6 +623,7 @@ if __name__ == "__main__":
                 ):
                     active_conversation = False
                     print("Bye!")
+
                 else:
                     agent_response = a(user_prompt)
                     print(f"[agent]:{agent_response}")

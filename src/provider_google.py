@@ -14,7 +14,7 @@ class GoogleProvider(LLMProvider):
         self.config = config
         self.args = args
 
-    def __call__(self, conversation, mcp_manager) -> str:
+    def __call__(self, conversation, mcp_managers: dict) -> str:
 
         # self.args unused as tools are defined by config
 
@@ -55,13 +55,13 @@ class GoogleProvider(LLMProvider):
                     elif (
                         tool_call_function.name == "greetings"
                         or tool_call_function.name == "farewell"
-                        and mcp_manager[0].name == "greetings"
+                        and mcp_managers is not None
                     ):
 
                         # ------------------------------------
                         # INSTANTIATING TOOL_FUNCTION FROM MCP_MANAGER
                         # ------------------------------------
-                        tool_function = mcp_manager[0].execute_tool
+                        tool_function = mcp_managers["greetings"].execute_tool
 
                         if tool_call_function.name == "greetings":
                             result = tool_function("greetings", tool_call_function.args)
@@ -73,13 +73,13 @@ class GoogleProvider(LLMProvider):
                     elif (
                         tool_call_function.name == "add"
                         or tool_call_function.name == "multiply"
-                        and mcp_manager[1].name == "arithm"
+                        and mcp_managers is not None
                     ):
 
                         # ------------------------------------
                         # INSTANTIATING TOOL_FUNCTION FROM MCP_MANAGER
                         # ------------------------------------
-                        tool_function = mcp_manager[1].execute_tool
+                        tool_function = mcp_managers["arithm"].execute_tool
 
                         if tool_call_function.name == "add":
                             result = tool_function("add", tool_call_function.args)

@@ -13,6 +13,8 @@ class MCPClient:
     def __init__(self) -> None:
         self.session: Optional[ClientSession] = None
         self.exit_stack = AsyncExitStack()
+        self.server_info = None
+        self.server_status = None
         self.tools: list[dict[str, Any]] = []
         self.started_event = None
         self.shutdown_event = None
@@ -33,11 +35,30 @@ class MCPClient:
         self.session = await self.exit_stack.enter_async_context(
             ClientSession(stdio, write)
         )
-        await self.session.initialize()
 
-        msg = f"   From MCP client: Connected to MCP server {server_script_path}"
+        init_result = await self.session.initialize()
+        self.server_info = init_result.serverInfo
+        self.server_status = await self.get_server_status()
+
+        msg = f"   From MCP client: Connecting to MCP server {self.server_info.name}, v-{self.server_info.version}, status: {self.server_status}."
         print(msg)
-        return msg
+
+        return {
+            "name": self.server_info.name,
+            "version": self.server_info.version,
+            "protocol_version": init_result.protocolVersion,
+            "status": self.server_status,
+        }
+
+    async def get_server_status(self) -> str:
+        """Check liveness with an MCP ping. Returns 'connected' or 'disconnected'."""
+        if self.session is None:
+            return "disconnected"
+        try:
+            await self.session.send_ping()
+            return "connected"
+        except Exception:
+            return "disconnected"
 
     async def run(self, server_script_path):
         self.started_event = asyncio.Event()
