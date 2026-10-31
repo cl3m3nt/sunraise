@@ -54,7 +54,7 @@ from user import User
 
 from dotenv import load_dotenv
 
-from config import YELLOW, RESET
+from config import YELLOW, GREEN, RESET
 
 
 logging.basicConfig(
@@ -73,7 +73,6 @@ isdotenv = load_dotenv()
 
 # Config map with all provider configurations
 PROVIDER_CONFIG_MAP = get_provider_config_map()
-
 
 # ---------------------------------------------------------------------------
 # MAIN FUNCTION
@@ -228,7 +227,7 @@ if __name__ == "__main__":
 
             # Executing get_tools fom MCPManager
             tool_result_arithm = mcp_manager_arithm.get_tools()
-            print(tool_result_arithm)
+            # print(tool_result_arithm)
             for t in tool_result_arithm:
                 # print(t["description"])
                 mcp_tool = prepare_mcp_google(t)
@@ -236,9 +235,9 @@ if __name__ == "__main__":
 
             # Executing get_tools fom MCPManager
             tool_result_calendar = mcp_manager_calendar.get_tools()
-            print(tool_result_calendar)
+            # print(tool_result_calendar)
             for t in tool_result_calendar:
-                print(t["description"])
+                # print(t["description"])
                 mcp_tool = prepare_mcp_google(t)
                 tools.append(mcp_tool)
 
@@ -296,9 +295,9 @@ if __name__ == "__main__":
 
                 print(
                     "\n"
-                    + "---------------BUILDING System instruction with MCP ----------------"
+                    + "--------------- BUILDING System instruction with MCP ----------------"
                 )
-                logger.info("\n" + SYSTEM_INSTRUCTION_WITH_MCP)
+                logger.info("\n" + f"{GREEN}{SYSTEM_INSTRUCTION_WITH_MCP}{RESET}")
                 google_config = build_google_config(
                     SYSTEM_INSTRUCTION_WITH_MCP, tools, skills
                 )
@@ -397,8 +396,10 @@ if __name__ == "__main__":
 
             a = Agent("openaiAgent", openai_llm, "system")
 
-        print(f"Created {a.LLMProvider.provider} agent with {a.LLMProvider.model} LLM.")
-
+        print("\n" + "--------------- CREATING Agent ---------------")
+        logger.info(
+            f"Using {a.LLMProvider.provider} agent with {a.LLMProvider.model} LLM."
+        )
         # ---------------------------------------------------------------------------
         # MAIN CONVERSATION LOOP
         # ---------------------------------------------------------------------------
