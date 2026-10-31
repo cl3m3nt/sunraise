@@ -52,15 +52,15 @@ class GoogleProvider(LLMProvider):
                         result = tool_function(**tool_call_function.args)
                         print(f"{BLUE} tools result:{result}{RESET}")
 
+                    # ------------------------------------
+                    # INSTANTIATING TOOL_FUNCTION FROM MCP_MANAGER for GREETINGS server
+                    # ------------------------------------
+
                     elif (
                         tool_call_function.name == "greetings"
                         or tool_call_function.name == "farewell"
-                        and mcp_managers is not None
-                    ):
+                    ) and mcp_managers is not None:
 
-                        # ------------------------------------
-                        # INSTANTIATING TOOL_FUNCTION FROM MCP_MANAGER
-                        # ------------------------------------
                         tool_function = mcp_managers["greetings"].execute_tool
 
                         if tool_call_function.name == "greetings":
@@ -70,15 +70,15 @@ class GoogleProvider(LLMProvider):
 
                         print(f"{BLUE} greeting/farewell result:{result}{RESET}")
 
+                    # ------------------------------------
+                    # INSTANTIATING TOOL_FUNCTION FROM MCP_MANAGER for ARITHM server
+                    # ------------------------------------
+
                     elif (
                         tool_call_function.name == "add"
                         or tool_call_function.name == "multiply"
-                        and mcp_managers is not None
-                    ):
+                    ) and mcp_managers is not None:
 
-                        # ------------------------------------
-                        # INSTANTIATING TOOL_FUNCTION FROM MCP_MANAGER
-                        # ------------------------------------
                         tool_function = mcp_managers["arithm"].execute_tool
 
                         if tool_call_function.name == "add":
@@ -87,6 +87,23 @@ class GoogleProvider(LLMProvider):
                             result = tool_function("multiply", tool_call_function.args)
 
                         print(f"{BLUE} add/multiply result:{result}{RESET}")
+
+                    # ------------------------------------
+                    # INSTANTIATING TOOL_FUNCTION FROM MCP_MANAGER for CALENDAR server
+                    # ------------------------------------
+
+                    elif (
+                        tool_call_function.name == "get_calendar_events"
+                    ) and mcp_managers is not None:
+
+                        tool_function = mcp_managers["calendar"].execute_tool
+
+                        if tool_call_function.name == "get_calendar_events":
+                            result = tool_function(
+                                "get_calendar_events", tool_call_function.args
+                            )
+
+                        print(f"{BLUE} get calendar events result:{result}{RESET}")
 
                 # all tool_result concatenated as prepared_tool_result
                 tool_results.append(

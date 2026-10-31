@@ -4,7 +4,6 @@ import os
 import sys
 from contextlib import AsyncExitStack
 from typing import Any, Optional
-from waiting import get_waiting
 
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
@@ -112,10 +111,10 @@ class MCPClient:
 
         if tool_name == "get_calendar_events":
             print("--- Getting calendar info ---")
-            await asyncio.sleep(5)
-            print("--- Finalizing calendar workflow ---")
-            await asyncio.sleep(3)
-            get_waiting()
+            # await asyncio.sleep(5)
+            # print("--- Finalizing calendar workflow ---")
+            # await asyncio.sleep(3)
+            # get_waiting()
 
         elif tool_name == "add":
             print(f"--- Adding  {arguments} ---")

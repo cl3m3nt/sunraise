@@ -1,3 +1,4 @@
+import logging
 import os
 
 from google.genai import types
@@ -10,6 +11,15 @@ from tools.current_time import get_current_time
 # loading local skills
 from tools.read_skill import read_skill
 from skills_loader import render_skills_catalog
+
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="[%(asctime)s] - %(levelname)s - %(name)s - %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
+
+logger = logging.getLogger(__name__)
 
 load_dotenv()
 
@@ -129,7 +139,9 @@ def build_anthropic_system_prompt(system_instruction, skills):
 
 
 def build_google_config(system_instruction, tools, skills):
-    print("Using google default config.")
+    print("\n" + "--------------- BUILDING Google config ---------------")
+
+    logger.info("Using google default config.")
     if tools:
         tool_decl_list = []
         for tool in tools:
