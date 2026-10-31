@@ -1,6 +1,15 @@
+import logging
 import os
 import yaml
 from dataclasses import dataclass
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="[%(asctime)s] - %(levelname)s - %(name)s - %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
+logger = logging.getLogger(__name__)
+
 
 SKILLS_DIR = os.path.dirname(os.path.abspath(__file__)) + "/skills"
 
@@ -23,6 +32,8 @@ def get_skills(skill_dir: str):
     """Get skills within a given skill directory"""
 
     skills = []
+
+    print("\n" + "--------------- GETTING Skill(s) ---------------")
 
     if os.path.isdir(skill_dir):
         skill_list = os.listdir(skill_dir)
@@ -52,7 +63,7 @@ def parse_skill(skill_path: str):
     metadata = {}
 
     with open(skill_path, "r") as f:
-        print(f"{GREEN}Reading skill file at {skill_path}{RESET}")
+        logger.info(f"{GREEN}Reading skill file at {skill_path}{RESET}")
         lines = f.read().splitlines()
 
     if lines[0] == "---":  # skill metadata start

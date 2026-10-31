@@ -1,4 +1,5 @@
 import argparse
+import logging
 from agent import Agent
 from banner import get_banner
 
@@ -54,6 +55,18 @@ from user import User
 from dotenv import load_dotenv
 
 from config import YELLOW, RESET
+
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="[%(asctime)s] - %(levelname)s - %(name)s - %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
+logging.getLogger("httpx").setLevel(logging.WARNING)
+
+# logging.disable(logging.CRITICAL)
+
+logger = logging.getLogger(__name__)
 
 # saving load_dotenv() as boolean for downstream check
 isdotenv = load_dotenv()
@@ -153,11 +166,17 @@ if __name__ == "__main__":
             # ------------------------------------
             # TOOLS SUBSECTION
             # ------------------------------------
+
+            print("--------------- GETTING Tool(s)  ---------------")
             tools = [
                 google_weather_tool,
                 google_current_time_tool,
                 google_read_skill_tool,
             ]
+            tools_name = []
+            for t in tools:
+                tools_name.append(t["name"])
+            logger.info(tools_name)
 
             # ------------------------------------
             # SKILLS SUBSECTION
@@ -181,7 +200,7 @@ if __name__ == "__main__":
             # defining the mcp server module path
             mcp_server_path_arithm = "./mcp_servers/arithm/server.py"
 
-            print("--------------- Starting MCP Manager(s) ---------------")
+            print("\n" + "--------------- STARTING MCP Manager(s) ---------------")
             # starting the MCP servers
             result_greetings = mcp_manager_greetings.start(mcp_server_path_greetings)
             result_arithm = mcp_manager_arithm.start(mcp_server_path_arithm)
@@ -205,14 +224,14 @@ if __name__ == "__main__":
                 mcp_tool = prepare_mcp_google(t)
                 tools.append(mcp_tool)
 
-            print(
-                "--------------- Checking tools from init tool def + mcp tool ---------------"
-            )
+            print("\n" + "--------------- LISTING local + mcp Tools ---------------")
+            tools_name = []
             for t in tools:
-                print(t["name"])
+                tools_name.append(t["name"])
+            logger.info(tools_name)
 
             # ------------------------------------
-            # GOOGLE MCP SUBSECTION
+            # GOOGLE SYSTEM INSTRUCTION
             # ------------------------------------
 
             if react is not None:
@@ -222,7 +241,6 @@ if __name__ == "__main__":
             else:
                 SYSTEM_INSTRUCTION_WITH_MCP = SYSTEM_INSTRUCTION
                 for t in tool_result_greetings:
-                    # print(t["description"])
                     SYSTEM_INSTRUCTION_WITH_MCP = (
                         SYSTEM_INSTRUCTION_WITH_MCP
                         + "\n"
@@ -234,7 +252,6 @@ if __name__ == "__main__":
                         + " tool."
                     )
                 for t in tool_result_arithm:
-                    # print(t["description"])
                     SYSTEM_INSTRUCTION_WITH_MCP = (
                         SYSTEM_INSTRUCTION_WITH_MCP
                         + "\n"
@@ -245,13 +262,15 @@ if __name__ == "__main__":
                         + t["name"]
                         + " tool."
                     )
-                print("---------------System instruction with MCP ----------------")
-                print(SYSTEM_INSTRUCTION_WITH_MCP)
+                print(
+                    "\n"
+                    + "---------------BUILDING System instruction with MCP ----------------"
+                )
+                logger.info("\n" + SYSTEM_INSTRUCTION_WITH_MCP)
                 google_config = build_google_config(
                     SYSTEM_INSTRUCTION_WITH_MCP, tools, skills
                 )
 
-            # Option 2: PASS MCP MANAGER during LLM Provider instantiation
             google_llm = GoogleProvider(
                 provider_cfg["name"],
                 provider_cfg["model"],
@@ -441,9 +460,9 @@ if __name__ == "__main__":
                     for mcp_manager in mcp_managers.values():
                         print(
                             f"MCP server: {mcp_manager.name}, "
-                            f"status: {mcp_manager.mcpclient.server_status}"
+                            f"status: {mcp_manager.mcp_client.server_status}"
                         )
-                        for t in mcp_manager.mcpclient.tools:
+                        for t in mcp_manager.mcp_client.tools:
                             print(f"tool:{t["name"]}, {t["description"]}")
                 else:
                     print("No MCP server available")
