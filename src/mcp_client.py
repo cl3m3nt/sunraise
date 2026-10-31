@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import os
 import sys
 from contextlib import AsyncExitStack
@@ -8,11 +9,21 @@ from waiting import get_waiting
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 
+# Logger config
+logging.basicConfig(
+    level=logging.INFO,
+    format="[%(asctime)s] - %(levelname)s - %(name)s - %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
+logger = logging.getLogger(__name__)
+
 
 class MCPClient:
     def __init__(self) -> None:
         self.session: Optional[ClientSession] = None
         self.exit_stack = AsyncExitStack()
+        self.server_info = None
+        self.server_status = None
         self.tools: list[dict[str, Any]] = []
         self.started_event = None
         self.shutdown_event = None
@@ -33,11 +44,30 @@ class MCPClient:
         self.session = await self.exit_stack.enter_async_context(
             ClientSession(stdio, write)
         )
-        await self.session.initialize()
 
-        msg = f"   From MCP client: Connected to MCP server {server_script_path}"
-        print(msg)
-        return msg
+        init_result = await self.session.initialize()
+        self.server_info = init_result.serverInfo
+        self.server_status = await self.get_server_status()
+
+        msg = f"Connecting to MCP server {self.server_info.name}, v-{self.server_info.version}, status: {self.server_status}."
+        logger.info(msg)
+
+        return {
+            "name": self.server_info.name,
+            "version": self.server_info.version,
+            "protocol_version": init_result.protocolVersion,
+            "status": self.server_status,
+        }
+
+    async def get_server_status(self) -> str:
+        """Check liveness with an MCP ping. Returns 'connected' or 'disconnected'."""
+        if self.session is None:
+            return "disconnected"
+        try:
+            await self.session.send_ping()
+            return "connected"
+        except Exception:
+            return "disconnected"
 
     async def run(self, server_script_path):
         self.started_event = asyncio.Event()
@@ -45,15 +75,7 @@ class MCPClient:
 
         await self.connect_to_server(server_script_path)
         self.started_event.set()
-        print("   From MCP client: Running MCP session.")
-
-        """
-        while (self.shutdown_event.is_set() is not True):
-            print("--- waiting for shutdown event ---")
-            await asyncio.sleep(5) 
-            # event loop can continue, only this coroutine is paused 5s
-            # so this gives "illusion" that the session run lasts 5s more
-        """
+        logger.info("Running MCP session.")
 
         await self.shutdown_event.wait()
 
@@ -64,7 +86,7 @@ class MCPClient:
     async def get_tools(self):
 
         # Send the MCP primitive msg 'list_tools()' over the MCP session and wait server response
-        print("   From MCP client: getting MCP tools")
+        logger.info("From MCP client: getting MCP tools")
         response = await self.session.list_tools()
 
         self.tools = [
@@ -75,8 +97,8 @@ class MCPClient:
             }
             for tool in response.tools
         ]
-        print(
-            f"    From MCP client: MCP server tools list: {[t["name"] for t in self.tools]} ---"
+        logger.info(
+            f"From MCP client: MCP server tools list: {[t["name"] for t in self.tools]} ---"
         )
 
         return self.tools
