@@ -158,7 +158,7 @@ class GoogleProvider(LLMProvider):
 
         return function_calls
 
-    def react_call(self, conversation, max_steps):
+    def react_call(self, conversation, mcp_managers, max_steps):
 
         for step in range(1, max_steps + 1):
 
