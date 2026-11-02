@@ -91,7 +91,6 @@ class GoogleProvider(LLMProvider):
                     # ------------------------------------
                     # INSTANTIATING TOOL_FUNCTION FROM MCP_MANAGER for CALENDAR server
                     # ------------------------------------
-
                     elif (
                         tool_call_function.name == "get_calendar_events"
                     ) and mcp_managers is not None:
@@ -104,6 +103,9 @@ class GoogleProvider(LLMProvider):
                             )
 
                         print(f"{BLUE} get calendar events result:{result}{RESET}")
+
+                    else:
+                        result = f"Error: unknown tool '{tool_call_function.name}'"
 
                 # all tool_result concatenated as prepared_tool_result
                 tool_results.append(
@@ -191,15 +193,64 @@ class GoogleProvider(LLMProvider):
             observation_parts = []
             for fc in function_calls:
                 print(f"  [action {step}]: {fc.name}({dict(fc.args)})")
-                tool_function = TOOL_SWITCH.get(fc.name)
 
-                if tool_function is None:
-                    result = f"Error: unknown tool '{fc.name}'"
-                else:
+                if fc.name in TOOL_SWITCH:
+                    tool_function = TOOL_SWITCH.get(fc.name)
+
                     try:
                         result = tool_function(**fc.args)
                     except Exception as exc:  # surface tool errors back to the model
                         result = f"Error in ReAct loop while running {fc.name}: {exc}"
+
+                # ------------------------------------
+                # INSTANTIATING TOOL_FUNCTION FROM MCP_MANAGER for GREETINGS server
+                # ------------------------------------
+
+                elif (
+                    fc.name == "greetings" or fc.name == "farewell"
+                ) and mcp_managers is not None:
+
+                    tool_function = mcp_managers["greetings"].execute_tool
+
+                    if fc.name == "greetings":
+                        result = tool_function("greetings", fc.args)
+                    elif fc.name == "farewell":
+                        result = tool_function("farewell", fc.args)
+
+                    print(f"{BLUE} greeting/farewell result:{result}{RESET}")
+
+                # ------------------------------------
+                # INSTANTIATING TOOL_FUNCTION FROM MCP_MANAGER for ARITHM server
+                # ------------------------------------
+
+                elif (
+                    fc.name == "add" or fc.name == "multiply"
+                ) and mcp_managers is not None:
+
+                    tool_function = mcp_managers["arithm"].execute_tool
+
+                    if fc.name == "add":
+                        result = tool_function("add", fc.args)
+                    elif fc.name == "multiply":
+                        result = tool_function("multiply", fc.args)
+
+                    print(f"{BLUE} add/multiply result:{result}{RESET}")
+
+                # ------------------------------------
+                # INSTANTIATING TOOL_FUNCTION FROM MCP_MANAGER for CALENDAR server
+                # ------------------------------------
+
+                elif (fc.name == "get_calendar_events") and mcp_managers is not None:
+
+                    tool_function = mcp_managers["calendar"].execute_tool
+
+                    if fc.name == "get_calendar_events":
+                        result = tool_function("get_calendar_events", fc.args)
+
+                    print(f"{BLUE} get calendar events result:{result}{RESET}")
+
+                else:
+                    result = f"Error: unknown tool '{fc.name}'"
 
                 print(f"  [observation {step}]: {result}")
                 observation_parts.append(
