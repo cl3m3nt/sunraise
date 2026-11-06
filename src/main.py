@@ -40,7 +40,7 @@ from skills_loader import SKILLS_DIR
 
 from mcp_client import MCPClient
 from mcp_manager import MCPManager
-from prepare_mcp_tools import prepare_mcp_google
+from prepare_mcp_tools import prepare_mcp_google, prepare_mcp_mistral
 
 
 from conversation import (
@@ -393,6 +393,71 @@ if __name__ == "__main__":
                 mistral_read_skill_tool,
             ]
 
+            # ------------------------------------
+            # MCP SUBSECTION
+            # ------------------------------------
+            # creating mcp client
+            mcp_client_greetings = MCPClient()
+            # creating mcp manager that takes clients input
+            mcp_manager_greetings = MCPManager("greetings", mcp_client_greetings)
+            # defining the mcp server module path
+            mcp_server_path_greetings = "./mcp_servers/greetings/server.py"
+
+            # creating mcp client
+            mcp_client_arithm = MCPClient()
+            # creating mcp manager that takes clients input
+            mcp_manager_arithm = MCPManager("arithm", mcp_client_arithm)
+            # defining the mcp server module path
+            mcp_server_path_arithm = "./mcp_servers/arithm/server.py"
+
+            # creating mcp client
+            mcp_client_calendar = MCPClient()
+            # creating mcp manager that takes clients input
+            mcp_manager_calendar = MCPManager("calendar", mcp_client_calendar)
+            # defining the mcp server module path
+            mcp_server_path_calendar = "./mcp_servers/calendar/server.py"
+
+            print("\n" + "--------------- STARTING MCP Manager(s) ---------------")
+            # starting the MCP servers
+            result_greetings = mcp_manager_greetings.start(mcp_server_path_greetings)
+            result_arithm = mcp_manager_arithm.start(mcp_server_path_arithm)
+            result_calendar = mcp_manager_calendar.start(mcp_server_path_calendar)
+
+            mcp_managers = {
+                mcp_manager_greetings.name: mcp_manager_greetings,
+                mcp_manager_arithm.name: mcp_manager_arithm,
+                mcp_manager_calendar.name: mcp_manager_calendar,
+            }
+
+            # Executing get_tools fom MCPManager
+            tool_result_greetings = mcp_manager_greetings.get_tools()
+            for t in tool_result_greetings:
+                # print(t["description"])
+                mcp_tool = prepare_mcp_mistral(t)
+                tools.append(mcp_tool)
+
+            # Executing get_tools fom MCPManager
+            tool_result_arithm = mcp_manager_arithm.get_tools()
+            # print(tool_result_arithm)
+            for t in tool_result_arithm:
+                # print(t["description"])
+                mcp_tool = prepare_mcp_mistral(t)
+                tools.append(mcp_tool)
+
+            # Executing get_tools fom MCPManager
+            tool_result_calendar = mcp_manager_calendar.get_tools()
+            # print(tool_result_calendar)
+            for t in tool_result_calendar:
+                # print(t["description"])
+                mcp_tool = prepare_mcp_mistral(t)
+                tools.append(mcp_tool)
+
+            print("\n" + "--------------- LISTING local + mcp Tools ---------------")
+            tools_name = []
+            for t in tools:
+                tools_name.append(t["function"]["name"])
+            logger.info(tools_name)
+
             if react is not None:
                 mistral_config = REACT_SYSTEM_INSTRUCTION
             else:
@@ -602,7 +667,7 @@ if __name__ == "__main__":
                         )
 
                         if not react:
-                            agent_response = a(conversation)
+                            agent_response = a(conversation, mcp_managers)
 
                             agent_message = {
                                 "role": "assistant",
