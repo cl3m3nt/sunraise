@@ -19,7 +19,7 @@ def get_calendar_events() -> dict:
         .list(
             calendarId="primary",
             timeMin=one_month_ago.isoformat(),
-            maxResults=50,
+            maxResults=10,
             singleEvents=True,
             orderBy="startTime",
         )

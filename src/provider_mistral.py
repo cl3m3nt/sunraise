@@ -14,7 +14,7 @@ class MistralProvider(LLMProvider):
         self.config = config
         self.args = args
 
-    def __call__(self, conversation) -> str:
+    def __call__(self, conversation, mcp_managers: dict) -> str:
 
         # defining tool from self.args
         tools = list(self.args)
@@ -65,10 +65,76 @@ class MistralProvider(LLMProvider):
                         tool_call.function.name,
                         tool_call.function.arguments,
                     )
-                    tool_function = TOOL_SWITCH[tool_call.function.name]
-                    tool_func_args = json.loads(tool_call.function.arguments)
 
-                    result = tool_function(**tool_func_args)
+                    if tool_call.function.name in TOOL_SWITCH:
+                        tool_function = TOOL_SWITCH[tool_call.function.name]
+                        tool_func_args = json.loads(tool_call.function.arguments)
+
+                        result = tool_function(**tool_func_args)
+
+                    # ------------------------------------
+                    # INSTANTIATING TOOL_FUNCTION FROM MCP_MANAGER for GREETINGS server
+                    # ------------------------------------
+
+                    elif (
+                        tool_call.function.name == "greetings"
+                        or tool_call.function.name == "farewell"
+                    ) and mcp_managers is not None:
+
+                        tool_function = mcp_managers["greetings"].execute_tool
+
+                        if tool_call.function.name == "greetings":
+                            result = tool_function(
+                                "greetings", json.loads(tool_call.function.arguments)
+                            )
+                        elif tool_call.function.name == "farewell":
+                            result = tool_function(
+                                "farewell", json.loads(tool_call.function.arguments)
+                            )
+
+                        print(f"{BLUE} greeting/farewell result:{result}{RESET}")
+
+                    # ------------------------------------
+                    # INSTANTIATING TOOL_FUNCTION FROM MCP_MANAGER for ARITHM server
+                    # ------------------------------------
+
+                    elif (
+                        tool_call.function.name == "add"
+                        or tool_call.function.name == "multiply"
+                    ) and mcp_managers is not None:
+
+                        tool_function = mcp_managers["arithm"].execute_tool
+
+                        if tool_call.function.name == "add":
+                            result = tool_function(
+                                "add", json.loads(tool_call.function.arguments)
+                            )
+                        elif tool_call.function.name == "multiply":
+                            result = tool_function(
+                                "multiply", json.loads(tool_call.function.arguments)
+                            )
+
+                        print(f"{BLUE} add/multiply result:{result}{RESET}")
+
+                    # ------------------------------------
+                    # INSTANTIATING TOOL_FUNCTION FROM MCP_MANAGER for CALENDAR server
+                    # ------------------------------------
+                    elif (
+                        tool_call.function.name == "get_calendar_events"
+                    ) and mcp_managers is not None:
+
+                        tool_function = mcp_managers["calendar"].execute_tool
+
+                        if tool_call.function.name == "get_calendar_events":
+                            result = tool_function(
+                                "get_calendar_events",
+                                json.loads(tool_call.function.arguments),
+                            )
+
+                        print(f"{BLUE} get calendar events result:{result}{RESET}")
+
+                    else:
+                        result = f"Error: unknown tool '{tool_call.function.name}'"
 
                     function_message = {
                         "role": "tool",
@@ -79,8 +145,6 @@ class MistralProvider(LLMProvider):
 
                     # adding function message to tool_results
                     tool_results.append(function_message)
-
-                # print(tool_results)
 
                 # final response
                 response_with_tool = self.client.chat.complete(
