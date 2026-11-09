@@ -458,10 +458,100 @@ if __name__ == "__main__":
                 tools_name.append(t["function"]["name"])
             logger.info(tools_name)
 
+            # ------------------------------------
+            # MISTRAL SYSTEM INSTRUCTION
+            # ------------------------------------
+
             if react is not None:
-                mistral_config = REACT_SYSTEM_INSTRUCTION
+                REACT_SYSTEM_INSTRUCTION_WITH_MCP = REACT_SYSTEM_INSTRUCTION
+
+                for t in tool_result_greetings:
+                    REACT_SYSTEM_INSTRUCTION_WITH_MCP = (
+                        REACT_SYSTEM_INSTRUCTION_WITH_MCP
+                        + "\n"
+                        + "You can "
+                        + t["description"]
+                        + " "
+                        + "with "
+                        + t["name"]
+                        + " tool."
+                    )
+                for t in tool_result_arithm:
+                    REACT_SYSTEM_INSTRUCTION_WITH_MCP = (
+                        REACT_SYSTEM_INSTRUCTION_WITH_MCP
+                        + "\n"
+                        + "You can "
+                        + t["description"]
+                        + " "
+                        + "with "
+                        + t["name"]
+                        + " tool."
+                    )
+
+                for t in tool_result_calendar:
+                    REACT_SYSTEM_INSTRUCTION_WITH_MCP = (
+                        REACT_SYSTEM_INSTRUCTION_WITH_MCP
+                        + "\n"
+                        + "You can "
+                        + t["description"]
+                        + " "
+                        + "with "
+                        + t["name"]
+                        + " tool."
+                    )
+                print(
+                    "\n"
+                    + "--------------- BUILDING System instruction with MCP ----------------"
+                )
+                logger.info("\n" + f"{GREEN}{REACT_SYSTEM_INSTRUCTION_WITH_MCP}{RESET}")
+
+                mistral_config = REACT_SYSTEM_INSTRUCTION_WITH_MCP
+
             else:
-                mistral_config = SYSTEM_INSTRUCTION
+                SYSTEM_INSTRUCTION_WITH_MCP = SYSTEM_INSTRUCTION
+
+                for t in tool_result_greetings:
+                    SYSTEM_INSTRUCTION_WITH_MCP = (
+                        SYSTEM_INSTRUCTION_WITH_MCP
+                        + "\n"
+                        + "You can "
+                        + t["description"]
+                        + " "
+                        + "with "
+                        + t["name"]
+                        + " tool."
+                    )
+                for t in tool_result_arithm:
+                    SYSTEM_INSTRUCTION_WITH_MCP = (
+                        SYSTEM_INSTRUCTION_WITH_MCP
+                        + "\n"
+                        + "You can "
+                        + t["description"]
+                        + " "
+                        + "with "
+                        + t["name"]
+                        + " tool."
+                    )
+
+                for t in tool_result_calendar:
+                    SYSTEM_INSTRUCTION_WITH_MCP = (
+                        SYSTEM_INSTRUCTION_WITH_MCP
+                        + "\n"
+                        + "You can "
+                        + t["description"]
+                        + " "
+                        + "with "
+                        + t["name"]
+                        + " tool."
+                    )
+
+                print(
+                    "\n"
+                    + "--------------- BUILDING System instruction with MCP ----------------"
+                )
+                logger.info("\n" + f"{GREEN}{SYSTEM_INSTRUCTION_WITH_MCP}{RESET}")
+
+                mistral_config = SYSTEM_INSTRUCTION_WITH_MCP
 
             mistral_llm = MistralProvider(
                 provider_cfg["name"],
@@ -675,7 +765,9 @@ if __name__ == "__main__":
                             }
 
                         elif react:
-                            agent_response = a.react_call(conversation, react)
+                            agent_response = a.react_call(
+                                conversation, mcp_managers, react
+                            )
                             agent_message = {
                                 "role": "assistant",
                                 "content": agent_response,
