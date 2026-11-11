@@ -285,6 +285,8 @@ class MistralProvider(LLMProvider):
                     else:
                         result = f"Error: unknown tool '{tc["function"]["name"]}'"
 
+                    print(f"    [observation {step}]: {result}")
+
                     prepared_observation = {
                         "role": "tool",
                         "name": tc["function"]["name"],
