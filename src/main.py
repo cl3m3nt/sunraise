@@ -804,7 +804,53 @@ if __name__ == "__main__":
                     REACT_SYSTEM_INSTRUCTION, skills
                 )
             else:
-                openai_config = build_openai_system_prompt(SYSTEM_INSTRUCTION, skills)
+
+                SYSTEM_INSTRUCTION_WITH_MCP = SYSTEM_INSTRUCTION
+
+                for t in tool_result_greetings:
+                    SYSTEM_INSTRUCTION_WITH_MCP = (
+                        SYSTEM_INSTRUCTION_WITH_MCP
+                        + "\n"
+                        + "You can "
+                        + t["description"]
+                        + " "
+                        + "with "
+                        + t["name"]
+                        + " tool."
+                    )
+                for t in tool_result_arithm:
+                    SYSTEM_INSTRUCTION_WITH_MCP = (
+                        SYSTEM_INSTRUCTION_WITH_MCP
+                        + "\n"
+                        + "You can "
+                        + t["description"]
+                        + " "
+                        + "with "
+                        + t["name"]
+                        + " tool."
+                    )
+
+                for t in tool_result_calendar:
+                    SYSTEM_INSTRUCTION_WITH_MCP = (
+                        SYSTEM_INSTRUCTION_WITH_MCP
+                        + "\n"
+                        + "You can "
+                        + t["description"]
+                        + " "
+                        + "with "
+                        + t["name"]
+                        + " tool."
+                    )
+
+                print(
+                    "\n"
+                    + "--------------- BUILDING System instruction with MCP ----------------"
+                )
+                logger.info("\n" + f"{GREEN}{SYSTEM_INSTRUCTION_WITH_MCP}{RESET}")
+
+                openai_config = build_openai_system_prompt(
+                    SYSTEM_INSTRUCTION_WITH_MCP, skills
+                )
 
             openai_llm = OpenAIProvider(
                 provider_cfg["name"],
