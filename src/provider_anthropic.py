@@ -52,9 +52,9 @@ class AnthropicProvider(LLMProvider):
                     tool_function_args = tool_call.input
                     result = tool_function(**tool_function_args)
 
-                    # ------------------------------------
-                    # INSTANTIATING TOOL_FUNCTION FROM MCP_MANAGER for GREETINGS server
-                    # ------------------------------------
+                # ------------------------------------
+                # INSTANTIATING TOOL_FUNCTION FROM MCP_MANAGER for GREETINGS server
+                # ------------------------------------
 
                 elif (
                     tool_call.name == "greetings" or tool_call.name == "farewell"
