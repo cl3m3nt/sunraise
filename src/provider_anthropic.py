@@ -193,18 +193,18 @@ class AnthropicProvider(LLMProvider):
             tool_results = []
             for tc in tool_calls:
                 tool_function_args = tc.input
+                print(f"    [action {step}]: {tc.name}({tc.input})")
 
                 if tc.name in TOOL_SWITCH:
-                    print(f"    [action {step}]: {tc.name}({tc.input})")
                     tool_function = TOOL_SWITCH.get(tc.name)
                     try:
                         result = tool_function(**tool_function_args)
                     except Exception as exc:
                         result = f"Error in ReAct loop while running {tc.name}: {exc}"
 
-                    # ------------------------------------
-                    # INSTANTIATING TOOL_FUNCTION FROM MCP_MANAGER for GREETINGS server
-                    # ------------------------------------
+                # ------------------------------------
+                # INSTANTIATING TOOL_FUNCTION FROM MCP_MANAGER for GREETINGS server
+                # ------------------------------------
 
                 elif (
                     tc.name == "greetings" or tc.name == "farewell"
