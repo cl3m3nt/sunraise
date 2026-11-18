@@ -14,7 +14,7 @@ class OpenAIProvider(LLMProvider):
         self.config = config
         self.args = args
 
-    def __call__(self, conversation) -> str:
+    def __call__(self, conversation, mcp_managers) -> str:
 
         # defining tool from self.args
         tools = list(self.args)
@@ -35,9 +35,68 @@ class OpenAIProvider(LLMProvider):
 
             for tool_call in tool_calls:
                 print("TOOL CALL:", tool_call.name, tool_call.arguments)
-                tool_function = TOOL_SWITCH[tool_call.name]
-                tool_function_args = json.loads(tool_call.arguments)
-                result = tool_function(**tool_function_args)
+
+                if tool_call.name in TOOL_SWITCH:
+                    tool_function = TOOL_SWITCH[tool_call.name]
+                    print(f"{BLUE}tool_function:{tool_function}{RESET}")
+                    tool_function_args = json.loads(tool_call.arguments)
+                    result = tool_function(**tool_function_args)
+
+                # ------------------------------------
+                # INSTANTIATING TOOL_FUNCTION FROM MCP_MANAGER for GREETINGS server
+                # ------------------------------------
+
+                elif (
+                    tool_call.name == "greetings" or tool_call.name == "farewell"
+                ) and mcp_managers is not None:
+
+                    tool_function = mcp_managers["greetings"].execute_tool
+                    tool_function_args = json.loads(tool_call.arguments)
+
+                    if tool_call.name == "greetings":
+                        result = tool_function("greetings", tool_function_args)
+                    elif tool_call.name == "farewell":
+                        result = tool_function("farewell", tool_function_args)
+
+                    print(f"{BLUE} greeting/farewell result:{result}{RESET}")
+
+                # ------------------------------------
+                # INSTANTIATING TOOL_FUNCTION FROM MCP_MANAGER for ARITHM server
+                # ------------------------------------
+
+                elif (
+                    tool_call.name == "add" or tool_call.name == "multiply"
+                ) and mcp_managers is not None:
+
+                    tool_function = mcp_managers["arithm"].execute_tool
+                    tool_function_args = json.loads(tool_call.arguments)
+
+                    if tool_call.name == "add":
+                        result = tool_function("add", tool_function_args)
+                    elif tool_call.name == "multiply":
+                        result = tool_function("multiply", tool_function_args)
+
+                    print(f"{BLUE} add/multiply result:{result}{RESET}")
+
+                # ------------------------------------
+                # INSTANTIATING TOOL_FUNCTION FROM MCP_MANAGER for CALENDAR server
+                # ------------------------------------
+                elif (
+                    tool_call.name == "get_calendar_events"
+                ) and mcp_managers is not None:
+
+                    tool_function = mcp_managers["calendar"].execute_tool
+                    tool_function_args = json.loads(tool_call.arguments)
+
+                    if tool_call.name == "get_calendar_events":
+                        result = tool_function(
+                            "get_calendar_events", tool_function_args
+                        )
+
+                    print(f"{BLUE} get calendar events result:{result}{RESET}")
+
+                else:
+                    result = f"Error: unknown tool '{tool_call.name}'"
 
                 tool_result = {
                     "type": "function_call_output",
