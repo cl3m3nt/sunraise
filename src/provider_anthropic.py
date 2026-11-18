@@ -23,7 +23,7 @@ class AnthropicProvider(LLMProvider):
         response = self.client.messages.create(
             model=self.model,
             system=self.config,
-            max_token=1000,
+            max_tokens=1000,
             # max_tokens=16000, # enough for thinking + response
             # output_config={"effort": "low"}, # low effort thinking
             # cache_control={"type": "ephemeral"}, # cache system + tool + history
@@ -159,7 +159,7 @@ class AnthropicProvider(LLMProvider):
             response = self.client.messages.create(
                 model=self.model,
                 system=self.config,
-                max_token=1000,
+                max_tokens=1000,
                 # max_tokens=16000, # enough for thinking + response
                 # output_config={"effort": "low"}, # low effort thinking
                 # cache_control={"type": "ephemeral"}, # cache system + tool + history
