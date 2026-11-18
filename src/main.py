@@ -195,8 +195,51 @@ if __name__ == "__main__":
             logger.info(tools_name)
 
             if react is not None:
+
+                REACT_SYSTEM_INSTRUCTION_WITH_MCP = REACT_SYSTEM_INSTRUCTION
+
+                for t in tool_result_greetings:
+                    REACT_SYSTEM_INSTRUCTION_WITH_MCP = (
+                        REACT_SYSTEM_INSTRUCTION_WITH_MCP
+                        + "\n"
+                        + "You can "
+                        + t["description"]
+                        + " "
+                        + "with "
+                        + t["name"]
+                        + " tool."
+                    )
+                for t in tool_result_arithm:
+                    REACT_SYSTEM_INSTRUCTION_WITH_MCP = (
+                        REACT_SYSTEM_INSTRUCTION_WITH_MCP
+                        + "\n"
+                        + "You can "
+                        + t["description"]
+                        + " "
+                        + "with "
+                        + t["name"]
+                        + " tool."
+                    )
+
+                for t in tool_result_calendar:
+                    REACT_SYSTEM_INSTRUCTION_WITH_MCP = (
+                        REACT_SYSTEM_INSTRUCTION_WITH_MCP
+                        + "\n"
+                        + "You can "
+                        + t["description"]
+                        + " "
+                        + "with "
+                        + t["name"]
+                        + " tool."
+                    )
+                print(
+                    "\n"
+                    + "--------------- BUILDING System instruction with MCP ----------------"
+                )
+                logger.info("\n" + f"{GREEN}{REACT_SYSTEM_INSTRUCTION_WITH_MCP}{RESET}")
+
                 anthropic_config = build_anthropic_system_prompt(
-                    REACT_SYSTEM_INSTRUCTION, skills
+                    REACT_SYSTEM_INSTRUCTION_WITH_MCP, skills
                 )
 
             else:
@@ -917,7 +960,9 @@ if __name__ == "__main__":
                             agent_response = a(conversation, mcp_managers)
 
                         elif react:
-                            agent_response = a.react_call(conversation, react)
+                            agent_response = a.react_call(
+                                conversation, mcp_managers, react
+                            )
 
                         agent_message = {
                             "role": "assistant",
