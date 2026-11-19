@@ -45,6 +45,7 @@ from prepare_mcp_tools import (
     prepare_mcp_mistral,
     prepare_mcp_anthropic,
     prepare_mcp_openai,
+    prepare_mcp_openllm,
 )
 
 
@@ -524,10 +525,118 @@ if __name__ == "__main__":
                 openllm_read_skill_tool,
             ]
 
+            # ------------------------------------
+            # MCP SUBSECTION
+            # ------------------------------------
+            # creating mcp client
+            mcp_client_greetings = MCPClient()
+            # creating mcp manager that takes clients input
+            mcp_manager_greetings = MCPManager("greetings", mcp_client_greetings)
+            # defining the mcp server module path
+            mcp_server_path_greetings = "./mcp_servers/greetings/server.py"
+
+            # creating mcp client
+            mcp_client_arithm = MCPClient()
+            # creating mcp manager that takes clients input
+            mcp_manager_arithm = MCPManager("arithm", mcp_client_arithm)
+            # defining the mcp server module path
+            mcp_server_path_arithm = "./mcp_servers/arithm/server.py"
+
+            # creating mcp client
+            mcp_client_calendar = MCPClient()
+            # creating mcp manager that takes clients input
+            mcp_manager_calendar = MCPManager("calendar", mcp_client_calendar)
+            # defining the mcp server module path
+            mcp_server_path_calendar = "./mcp_servers/calendar/server.py"
+
+            print("\n" + "--------------- STARTING MCP Manager(s) ---------------")
+            # starting the MCP servers
+            result_greetings = mcp_manager_greetings.start(mcp_server_path_greetings)
+            result_arithm = mcp_manager_arithm.start(mcp_server_path_arithm)
+            result_calendar = mcp_manager_calendar.start(mcp_server_path_calendar)
+
+            mcp_managers = {
+                mcp_manager_greetings.name: mcp_manager_greetings,
+                mcp_manager_arithm.name: mcp_manager_arithm,
+                mcp_manager_calendar.name: mcp_manager_calendar,
+            }
+
+            # Executing get_tools fom MCPManager
+            tool_result_greetings = mcp_manager_greetings.get_tools()
+            for t in tool_result_greetings:
+                # print(t["description"])
+                mcp_tool = prepare_mcp_openllm(t)
+                tools.append(mcp_tool)
+
+            # Executing get_tools fom MCPManager
+            tool_result_arithm = mcp_manager_arithm.get_tools()
+            # print(tool_result_arithm)
+            for t in tool_result_arithm:
+                # print(t["description"])
+                mcp_tool = prepare_mcp_openllm(t)
+                tools.append(mcp_tool)
+
+            # Executing get_tools fom MCPManager
+            tool_result_calendar = mcp_manager_calendar.get_tools()
+            # print(tool_result_calendar)
+            for t in tool_result_calendar:
+                # print(t["description"])
+                mcp_tool = prepare_mcp_openllm(t)
+                tools.append(mcp_tool)
+
+            print("\n" + "--------------- LISTING local + mcp Tools ---------------")
+            tools_name = []
+            for t in tools:
+                tools_name.append(t["function"]["name"])
+            logger.info(tools_name)
+
             if react is not None:
                 openllm_config = REACT_SYSTEM_INSTRUCTION
             else:
-                openllm_config = SYSTEM_INSTRUCTION
+                SYSTEM_INSTRUCTION_WITH_MCP = SYSTEM_INSTRUCTION
+
+                for t in tool_result_greetings:
+                    SYSTEM_INSTRUCTION_WITH_MCP = (
+                        SYSTEM_INSTRUCTION_WITH_MCP
+                        + "\n"
+                        + "You can "
+                        + t["description"]
+                        + " "
+                        + "with "
+                        + t["name"]
+                        + " tool."
+                    )
+                for t in tool_result_arithm:
+                    SYSTEM_INSTRUCTION_WITH_MCP = (
+                        SYSTEM_INSTRUCTION_WITH_MCP
+                        + "\n"
+                        + "You can "
+                        + t["description"]
+                        + " "
+                        + "with "
+                        + t["name"]
+                        + " tool."
+                    )
+
+                for t in tool_result_calendar:
+                    SYSTEM_INSTRUCTION_WITH_MCP = (
+                        SYSTEM_INSTRUCTION_WITH_MCP
+                        + "\n"
+                        + "You can "
+                        + t["description"]
+                        + " "
+                        + "with "
+                        + t["name"]
+                        + " tool."
+                    )
+
+                print(
+                    "\n"
+                    + "--------------- BUILDING System instruction with MCP ----------------"
+                )
+                logger.info("\n" + f"{GREEN}{SYSTEM_INSTRUCTION_WITH_MCP}{RESET}")
+
+                openllm_config = SYSTEM_INSTRUCTION_WITH_MCP
 
             openllm_llm = OpenLLMProvider(
                 provider_cfg["name"],
@@ -1048,7 +1157,7 @@ if __name__ == "__main__":
                             f"{YELLOW}---- conversation step {conversation_index} ---{RESET}"
                         )
                         if not react:
-                            agent_response = a(conversation)
+                            agent_response = a(conversation, mcp_managers)
 
                         elif react:
                             agent_response = a.react_call(conversation, react)
