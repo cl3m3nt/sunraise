@@ -195,7 +195,7 @@ class OpenLLMProvider(LLMProvider):
 
             return function_calls
 
-    def react_call(self, conversation, max_steps):
+    def react_call(self, conversation, mcp_managers, max_steps):
         # defining tool from self.args
         tools = list(self.args)
 
@@ -240,14 +240,65 @@ class OpenLLMProvider(LLMProvider):
                 tool_function = TOOL_SWITCH.get(tc.function.name)
                 tool_function_args = json.loads(tc.function.arguments)
 
-                if tool_function is None:
-                    result = f"Error: unknown tool '{tc.function.name}'"
-
-                else:
+                if tc.function.name in TOOL_SWITCH:
                     try:
                         result = tool_function(**tool_function_args)
                     except Exception as exc:
                         result = f"Error in ReAct loop while running {tc.function.name}: {exc}"
+
+                # ------------------------------------
+                # INSTANTIATING TOOL_FUNCTION FROM MCP_MANAGER for GREETINGS server
+                # ------------------------------------
+                elif (
+                    tc.function.name == "greetings" or tc.function.name == "farewell"
+                ) and mcp_managers is not None:
+
+                    tool_function = mcp_managers["greetings"].execute_tool
+
+                    if tc.function.name == "greetings":
+                        result = tool_function("greetings", tool_function_args)
+                    elif tc.function.name == "farewell":
+                        result = tool_function("farewell", tool_function_args)
+
+                    print(f"{BLUE} greeting/farewell result:{result}{RESET}")
+
+                # ------------------------------------
+                # INSTANTIATING TOOL_FUNCTION FROM MCP_MANAGER for ARITHM server
+                # ------------------------------------
+
+                elif (
+                    tc.function.name == "add" or tc.function.name == "multiply"
+                ) and mcp_managers is not None:
+
+                    tool_function = mcp_managers["arithm"].execute_tool
+
+                    if tc.function.name == "add":
+                        result = tool_function("add", tool_function_args)
+                    elif tc.function.name == "multiply":
+                        result = tool_function("multiply", tool_function_args)
+
+                    print(f"{BLUE} add/multiply result:{result}{RESET}")
+
+                # ------------------------------------
+                # INSTANTIATING TOOL_FUNCTION FROM MCP_MANAGER for CALENDAR server
+                # ------------------------------------
+
+                elif (
+                    tc.function.name == "get_calendar_events"
+                ) and mcp_managers is not None:
+
+                    tool_function = mcp_managers["calendar"].execute_tool
+
+                    if tc.function.name == "get_calendar_events":
+                        result = tool_function(
+                            "get_calendar_events", tool_function_args
+                        )
+
+                    print(f"{BLUE} get calendar events result:{result}{RESET}")
+
+                else:
+                    result = f"Error: unknown tool '{tc.function.name}'"
+
                 print(f"    [observation {step}]: {result}")
 
                 tool_result = {
