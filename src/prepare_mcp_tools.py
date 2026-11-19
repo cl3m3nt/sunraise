@@ -1,5 +1,5 @@
 def prepare_mcp_anthropic(mcp_tool_def: dict):
-    """Prepare tool definition from MCP server for google"""
+    """Prepare tool definition from MCP server for anthropic"""
     if "required" in mcp_tool_def["input_schema"]:
         mcp_anthropic_tool = {
             "name": mcp_tool_def["name"],
@@ -51,7 +51,7 @@ def prepare_mcp_google(mcp_tool_def: dict):
 
 
 def prepare_mcp_mistral(mcp_tool_def: dict):
-    """Prepare tool definition from MCP server for google"""
+    """Prepare tool definition from MCP server for mistral"""
     if "required" in mcp_tool_def["input_schema"]:
         mcp_mistral_tool = {
             "type": "function",
@@ -83,7 +83,7 @@ def prepare_mcp_mistral(mcp_tool_def: dict):
 
 
 def prepare_mcp_openllm(mcp_tool_def: dict):
-    """Prepare tool definition from MCP server for google"""
+    """Prepare tool definition from MCP server for openllm"""
     if "required" in mcp_tool_def["input_schema"]:
         mcp_openllm_tool = {
             "type": "function",
@@ -115,7 +115,7 @@ def prepare_mcp_openllm(mcp_tool_def: dict):
 
 
 def prepare_mcp_openai(mcp_tool_def: dict):
-    """Prepare tool definition from MCP server for google"""
+    """Prepare tool definition from MCP server for openai"""
     if "required" in mcp_tool_def["input_schema"]:
         mcp_openai_tool = {
             "type": "function",
